@@ -1,0 +1,72 @@
+-CUANDO TENGAS LOS CAMBIOS HECHOS, SE LO MANDAS A DAVID, PERO NO ANTES. No creo que esté bien mandarle algo a medio hacer y a parte, hay cosas que sabemos seguro que hay que  hacer, lo que puede decir david es que hagamos mas o usemos otros datos. Ademas, ek ya va a aportar dando recursos computacionales, solo con eso deberíamos darle la opcion de couatoria.
+
+-ULTIMOS CORREOS CON JONATANT -  VERANO 2019:
+
+    -Diego: 
+
+        Hola Jonatan, 
+
+        Te escribo porque he estado revisando los comentarios de Yuval sobre el conectoma (adjunto manuscrito con sus cambios). Hay varias sugerencias interesantes, pero las más importantes serían las siguientes: 
+            -Validar el conectoma con las distancias entre genes de forma diferente. En vez de comparar la distancia biológica (nivel de interacción) entre todos los genes del conectoma con sets random de genes, él propone lo siguiente: Comparar la distancia de los known-BAT genes (genes que están asociados al BAT) con los genes candidatos dentro del conectoma, y ver si esa distancia es menor que la existente entre known-BAT genes vs. random genes. El approach que yo usé es bastante regulero, porque por definición, si cogemos el top 1% de todos los genes asociados a UCP1, lógicamente todos esos genes van estar más cerca entre sí en comparación con genes random. Eso tendría sentido si usamos varios core genes, pero con uno sólo no da mucha información.
+                -comparar known with candidate y luego ver si la distancia entre known y random es menor te indica la probabilidad de que los known estén más cerca de los candiadtes segun lo esperado por azar. Known cerca de candidates te indica alto poder predicitivo del conectoma. 
+            -Usar varios core genes. Yo sigo sin verlo, me da la sensación que muchos de  los genes que pondríamos como core gene actuarían sobre el BAT a través de UCP1... La lista de candidatos sería más amplia y sin duda entrarían candidatos "reales" (e.g. gen que interacciona con un core gene que a su vez actúa sobre UCP1), pero también entraría mucha morralla. 
+            -Filtrado de genes candidados. Siguiendo el comentario anterior, Yuval propone filtrar los genes candidatos por su función: Mirar dentro de los knonw-BAT genes cuales son las funciones más frecuentes, y entonces seleccionar aquellos candidatos que tengan al menos una de esas funciones. Yo le veo mucho sentido a esto cuando usas muchos core genes y la lista de candidatos generada es enorme (miles de genes como en el paper de Yuval). En nuestro caso, con tan pocos genes no lo tengo claro. 
+        Creo que el primer punto habría que hacerlo sí o sí, porque la validación que ahora mismo hacemos del conectoma no es suficiente robusta, cuando mejor sea la validación más support tendrán los candidatos que proponemos. Los puntos 2 y 3 están bastante ligados, porque si cogiésemos varios core genes entonces si habría que filtrar (lista de candidatos más amplia). En caso de que nos quedemos con solo un core gene supongo que habría menos probabilidad de que entren falsos positivos (candidatos que no están implicados en el BAT), pero si queremos ser lo más estrictos posible (siguiendo la argumentación en el manuscrito), habría que filtrar. Esto último tendría que pensarlo bien. 
+
+    -Jonatan: 
+        Estoy de acuerdo en  hacer el punto 1, es clave. Los otros dos, quizás no tanto, básicamente porque tenemos solo un core-gene
+
+        Entiendo la situación. No te preocupes. Dale caña a lo urgente e importante ahora, y una vez pase la MC te pones con esto si encuentras hueco. 
+
+    -CONCULUSION:     
+        -Estoy de acuerdo con Jonatan, si solo hemos cogido un core-gene, ya hemos sido estrictos a tope. Además es el mejor core gene, no hay duda para el BAT. Por eso no creo que entren mucha morralal, incluso para los analisis evolutivos. 
+            -En mi opinion, si los knonw-BAT genes están mas cerca de los candidatos de lo esperdao por azar, con eso vale. 
+            -Si filtramos por funcipodríamos perder candidatos importantes. Imagina gen A que interacciona con gen B y eso interacciona con UCP1. Gen A favorece que B acutre sobre UCP1, pero resulta que A tiene una función diferente que la mayoría de proteínas en el conectoma, entonces quedaría fuera al filtrar. Dadas las distancias biologicas tan pequeñas que tenemos, no mrece la pena ahcer esto.
+
+
+-Mirar Correo con yuval: "https://mail.google.com/mail/u/0/#search/yuval+itan/FMfcgxmXJpqSFNFpQhSqMpzqndtwkBkB"
+
+-Mirar "Gene connectivity and enzyme evolution in the human metabolic network" de banteptitet
+
+-Mirar "Biological Network Approaches and Applications in Rare Disease Studies" de Yuval
+
+-Validación interna: Habiendo visto todo, el tío quiere seguir para adelante, eso es buena señal.
+
+-Nuevo paper de yuval usando el conectoma
+    -De novo variants in exomes of congenital heart disease patients identify risk genes and pathways
+
+-Evidencia en modelos murinos. Dice que aunque la evidencia venga de modelos murinos, sería esperable una gran interrelación ó cohesión entre los known-BAT genes si realmente tienen un papel en el BAT. Si ese grupo de genes asociados al BAT en diferentes modelos animales muestra una cohesión fuerte, sería esperable que tengan un paper relevante en el BAT humano, ya que si no, no deberían estar más cohesionados de lo esperado por azar, si lo están debería haber una razón, y seguramente sea su papel en el BAT. Por tanto los cercanos a ellos sin evidencia actual serían potenciales candidatos. 
+    -Me parece mejor opción que hacer una búsqueda de bibliografía sobre genes implicados al BAT en humanos (que en muchos casos no habrá papers). Este análisis como resultado adicional lo tengo clarísimo, pero Yuval además dice de quitar todo rastro de los predichos (mirar siguiente punto). 
+
+-Quitar predicted genes: Yuval dice que no deberíamos usar en los análisis ninguno de los genes que ha caído dentro del conectoma pero que no tienen evidencia de estar relacionados con el BAT. Dice que al coger el top 1% de UCP1, todo nuestro conectoma va a estar muy cohesionado per sé, es lo esperable por defecto. 
+    -Creo que es algo que en su momento no caí, pero tiene sentido. Si dos genes están muy cerca de UCP1, van a estar a su vez muy cerca entre si porque el camino más corto entre ellos es a través de UCP1, el cual tienen ambos muy cerca. Fallo mío. 
+        -Ej: A y C están muy cerca de B, por tanto el camino de A a C pasando por B será my corto. De modo que A y C estarán muy cerca. 
+    -Lo que si sería relevante es si los known-BAT genes están muy cohesionados, aunque en mi opinión sigue habiendo un poco de bias porque vamos a coger genes en base al criterio que nos interesa (relación con el BAT), pero los tomamos de una lista de genes que están muy cerca entre sí. 
+
+-Validación extra de la cohesión usando su codigo para comparar la distribución de kwnown-BAT genes con random genes. 
+    -Propone tomar todas las distancias entre los predicted-BAT genes y los known BAT genes (i.e. cada known-BAT genes a que distancia está de todos los predicted-BAT genes). Luego comparar esas distancias con la separación entre known-BAT genes y diferentes sets de genes escogidos al azar con un bootstrap, luego calcular un p.value, el cual debería ser significativo, ya que los predicted-BAT genes deben estar más cerca de los known, de lo esperado por azar si queremos usar los known para buscar nuevos candidatos (me ha pasado el código). 
+        -Me parece correcto y "alivia" el problema previamente mencionado, ya no usamos "predicted genes" en al validación. 
+
+-Validación extra del potencial predictivo: 
+    -Propone otro bootstrap en el que se toman la mitad de los genes del conectoma y se miran cuando son known-BAT genes. Entonces se mira si el número de known-BAT genes encontrados es mayor que un set de genes al azar, así se repite varias veces y se saca un p.value.
+        -Puede servir como comprobación interna, pero tal vez no sea lo suyo meterlo en el paper porque puede haber cierto sesgo en este análisis.
+
+-Filtrar por la función y tejido de UCP1 y otros known BAT genes, así solo cogeríamos genes que se eexpresan en el mismo tejido/ruta que UCP1 y el resto de known BAT genes. Quedarían así los que tienen relevancia funcional.
+    -No veo bien quitar genes que no se expresen en el BAT. Muchos de los 60 genes previamente asociados con el BAT no se expresan en el BAT, por ejemplo JUN, que está en la cascada de activación del BAT por parte de la T3. Por tanto, más que el tejido, la clave es que el gen participe en una cascada ó pathway que acabe en UCP1. 
+    -Por esa misma razón puede que si tenga sentido filtar por función, ya que reduciría la posibilidad de tener genes no implicados en esas rutas que acaban en UCP1 reduciendo así aun más la tasa de falsos positivos: 
+        -Imagina que tenemos el gen A que sabemos que afecta a UCP1, pero además hace otras cosas. Entre esas otras cosas, interacciona con B, pero B no tiene nada que ver con el BAT. Si filtramos únicamente por distancia biológica ese gen se nos colaría en el conectoma. En su momento no lo hicimos porque pensamos solo en el core gene que es UCP1, lo cual restringiría a proteínas desacoplantes y dejaría fuera al resto aunque tenga efecto sobre el BAT, pero si tenemos en cuenta las funciones de los known-BAT genes entonces tal vez si tendría sentido filtrar.  
+        -Auqnue puede que perdierámos casos interesantes. Por ejemplo, los receptores de sabor que tenemos dentro, pues eso lo mismo está implicado y se nos queda fuera. TAmbién es verdad que nosotros decimos que nuestra estrategía pretender minimzar los falsos positivos, pero asumimos que quedan verdaderos positivos fuera, así que tal vez sería coherente filtrar por función. 
+        -"We therefore first used DAVID (10) to estimate the gene ontology (GO) biological functional enrichment of all known 229 PID genes. We selected only those functions for which p < 0.05 (a total of 462 GO terms). We then applied DAVID GO biological terms analysis (11) to the PID gene candidates, and selected only genes associated with at least 1 of the 462 PID GO terms. This resulted in a final list of 3,110 in silico-predicted novel candidate PID genes." Del paper de david en frontiers
+
+-Añadir otros core genes a parte de UCP1. Propone meter otros genes muy muy asociados con la termogénesis no tiritante en el BAT. 
+    -Yo no lo veo, dada la importancia y sobre todo la especificidad de UCP1 con el BAT me parece el filtro clave usarlo como único core gene. Si metemos como cores otros genes asociados con el BAT pero no tan claves y sobre todo, no tan específicos, por ejemplo PPARGC1-Alpha, la lista de candidatos se nos va a llenar de falsos positivos.
+    -Se podría hacer y aplicar filtro de función pero haría falta además de tejido. Entonces, como he dicho antes estaríamos perdiendo genes que pueden ser muy claves (e.g. JUN). 
+    -Creo que el mejor filtro, más fino y más aséptico es UCP1. Creo que es el mejor se ajusta al BAT.
+
+
+-RESPUESTA JONATAN: 
+    -Bien a quitar los candidatos de los análisis de validación. Hay un BIAS clarísimo, si seleccionar el top1% de todos los genes del conectoma de UCP1 lógicamente te van a salir muy juntos. 
+    -Bien a usar los known en las validaciones. Reducimos el BIAS e intentamos solventar el problemas de los modelos animales, aunque seguramente le pida a Guille y Borja que hagan una lista con los genes con evidencia y que modelos se han usado.  
+    -Bien a no filtrar por tejido. Me da igual que el gen que empieza una cascada que acaba en el BAT esté fuera del tejido, el caso es que tiene un papel en el BAT. 
+    -Bien a filtrar por función-cascada. Es coherente con nuestra aproximación de reducir falsos positivos y presentar genes para estudios de genes candidatos.
+    -Bien a no coger varios core genes, porque realmente el único gen indudable que no da lugar a discusión es UCP1, además de que aumentaría el número de falsos positivos, aunque filtremos por tejido y función (3000 y pico candidatos?)     

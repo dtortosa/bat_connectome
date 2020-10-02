@@ -1,0 +1,339 @@
+GPR101	Acromegaly, predisposition to
+C9orf172	Schizophrenia  
+EIF3B	Schizophrenia  
+FAM189A2	Schizophrenia  
+FAXDC2	Schizophrenia  
+KDM3B	Schizophrenia  
+MAP4K4	Schizophrenia  
+PSMC2	Schizophrenia  
+QSER1	Schizophrenia  
+SLC22A23	Attention deficit hyperactivity disorder|Schizophrenia  
+TMEM8C	Schizophrenia  
+USP10	Schizophrenia  
+CHD5	Schizophrenia  
+CILP2	Schizophrenia  
+DOT1L	Gastric cancer  |Schizophrenia  
+HPCA	Dystonia  |Schizophrenia  
+KDELC2	Schizophrenia  
+KIAA0430	Schizophrenia  
+KIF24	Schizophrenia  
+MYLPF	Schizophrenia  
+PITRM1	Schizophrenia  
+sdhctv2	Cowden / Cowden-like syndrome  
+SHARPIN	Schizophrenia  
+TIGD7	Schizophrenia  
+CACNG1	Takotsubo (stress) cardiomyopathy 
+CADPS	Takotsubo (stress) cardiomyopathy 
+DNAL4	Mirror movements, congenital
+KIF2B	Prostate cancer   
+LRRC46	Prostate cancer   
+RPL31	Diamond-Blackfan anaemia
+ZNF844	Schizophrenia  
+GPT2	Developmental delay & microcephaly
+TMEM107	Tongue cysts, polydactyly & developmental delay
+CRB2	Nephrotic syndrome, steroid resistant|Congenital nephrosis, Finnish type-like, with cerebral ventriculomegaly & raised alpha-fetoprotein
+KATNB1	Microlissencephaly|Cerebral cortical malformations
+MAT2A	Thoracic aortic aneurysms  
+TDG	Coronary artery disease  |Increased genomic instability 
+CLPB	Neurodevelopmental disorder  |3-methylglutaconic aciduria, renal cysts, nephrocalcinosis & cataracts|3-methylglutaconic aciduria, progressive brain atrophy, intellectual disability, neutropaenia, cataracts & movement disorder|3-methylglutaconic aciduria, microcephaly and encephalopathy|3-methylglutaconic aciduria type IV, cataracts, neutropaenia & epilepsy
+GAL3ST2	Crohn's disease 
+LONP1	CODAS syndrome|Diaphragmatic hernia, congenital  
+PNPLA8	Neurodevelopmental disorder|Mitochondrial myopathy
+trem2v	Alzheimer disease  
+JPH1	Charcot-Marie-Tooth disease, modifier of
+ms4a6atv1	Parkinson disease  
+FYB	Thrombocytopaenia  |Thrombocytopaenia, small-platelet
+myo7atv3	Hearing loss
+PDXDC1	Hearing loss
+RBP1	Leber congenital amaurosis
+TMEM132E	Hearing loss, non-syndromic, autosomal recessive
+TCF20	Autism spectrum disorder
+MIR137	Schizophrenia / bipolar disorder, association with|Schizophrenia  |Reduced expression|Obesity, syndromic|Bipolar disorder|Altered expression
+GPR161	Pituitary stalk interruption syndrome
+bmp1-1	Bone fragility  
+cacnb2i2	Sudden cardiac death   
+GAS7	Glaucoma, primary open angle
+DNAJC3	Diabetes mellitus & multisystemic neurodegeneration
+E2F1	Azoospermia, non-obstructive
+SLC39A11	Autism spectrum disorder
+SLC9A1	Spastic diplegia, seizures, autism, intellectual disability & behavioural problems|Reduced activity and expression|Lichtenstein-Knorr syndrome
+TPGS1	Autism spectrum disorder
+INO80D	Aortic hypoplasia, premature atherosclerosis & arterial stiffness
+CNOT1	Amyotrophic lateral sclerosis  
+HNRNPD	Amyotrophic lateral sclerosis  
+KLRC1	Rheumatoid arthritis  
+CTBP2	Congenital heart disease 
+KCNH1	Zimmermann-Laband syndrome|Temple-Baraister syndrome|Epilepsy
+TOP2A	Congenital heart disease 
+KCNA2	Epileptic encephalopathy |Epilepsy  |Ataxia & myoclonic epilepsy
+MEG3	upd(14)pat syndrome
+OLFM1	Gilles de la Tourette syndrome
+PARS2	Alpers syndrome
+KCNC1	Epilepsy, progressive myoclonus
+DLK1	upd(14)mat syndrome
+PTPRA	Schizophrenia  
+RTL1	upd(14)pat syndrome
+TERF2IP	Melanoma  
+CLIC5	Progressive hearing loss & vestibular dysfunction
+FAM136A	Meniere's disease, autosomal dominant
+KCNH7	Bipolar spectrum disorder
+GTF2I	Williams-Beuren syndrome, transcriptional dysregulation
+C12orf4	Intellectual disability, ADHD and hypotonia
+DMBX1	Global developnetnal delay, epilepsy, hypotonia, hearing loss, hyperopia, and strabismus
+TNFRSF21	Coeliac disease
+WDR93	Autism spectrum disorder
+BRF1	Cerebellar-facial-dental syndrome
+ETV6	Acute lymphoblastic leukaemia & thrombocytopaenia|Thrombocytopaenia & haematologic malignancy
+EPB41L4A	Spastic paraplegia, failure to thrive
+MATN4	Global developmental delay, holoprosencephaly, microcephaly, lumbosacral myelomeningocele, epilepsy, proptosis and diabetes
+MRI1	Infantile epilepsy with severe cystic degeneration of the brain
+NUP107	Global developmental delay, light complexion, early onset focal segmental glomerulosclerosis
+PAM16	Spondylodysplastic dysplasia
+PDPR	Joubert syndrome
+PTPN23	Global developmental delay, epilepsy and brain atrophy
+SEC24D	Disturbed ossification of the skull & multiple fractures|Intellectual disability and epilepsy
+SPDL1	Primary microcephaly, severe
+ST7	Global developmental delay, intractable seizures and brain atrophy
+TSEN15	Global developmental delay, epilepsy and primary microcephaly
+TUBA3E	Global developmental delay, primary microcephaly, lissencephaly, epilepsy
+NLRP10	Miscarriage, recurrent
+OSBPL5	Miscarriage, recurrent
+YES1	Miscarriage, recurrent
+KLHL15	Intellectual disability  
+TAF6	Cornelia de Lange syndrome|Intellectual disability, syndromic  
+USP27X	Intellectual disability  
+CDK16	Intellectual disability  
+RLIM	Intellectual disability  
+SNRPB	Cerebro-costo-mandibular syndrome
+PTRH2	Global developmental delay, hearing loss and ataxia|Infantile-onset multisystem neurologic, endocrine, and pancreatic disease
+ARV1	Neurodegenrative disease with blindness
+CHAF1B	Global developmental delay, intellectual disability and ADHD
+DPH1	Cerebellar vermis hypoplasia, Dandy-Walker Malformation, hydrocephalus, developmental delay
+FAM120AOS	Coarse facial features, scoliosis, pectus excavatum, skin laxity, hypotonia, GERD, hyperactive airways, undescended testes
+FAM177A1	Macrocephaly, intellectual disability, dolichocephaly and mild obesity
+ISCA2	Neurodegeration, developmental delay, failure to thrive, quadriplegia, truncal hypotonia, optic atrophy, leukoencephalopathy|Mitochondrial disorder, neurodegenerative
+KCTD3	Severe psychomotor retardation, seizure, and cerebellar hypoplasia
+MTSS1L	Microcephaly, global developmental delay, intellectual disability, hypotonia, iron deposition in globus pallidus bilaterally
+NFKBIZ	Colorectal cancer 
+TMEM92	Cerebellar atrophy, hydrocephalus, global developmental delay and bilateral squint
+XIRP1	Primary microcephaly
+ETV1	Speech delay, psychomotor retardation, and dysmorphic facial appearance
+nlgn3tv1	Intellectual disability  
+TXNL4A	Burn-McKeown syndrome
+WDR73	Galloway-Mowat syndrome
+gtpbp3i5	Hypertrophic cardiomyopathy, lactic acidosis & encephalopathy
+CEP120	Jeune asphyxiating thoracic dystrophy
+RIPPLY2	Vertebral segmentation defects
+CENPF	Ciliopathy & microcephaly
+OSBPL2	Hearing loss, autosomal dominant
+CDK5	Lissencephaly, with cerebellar hypoplasia
+RPA3	Endometrial cancer   
+A2ML1	Otitis media, susceptibility to|Noonan-like syndrome  |Noonan syndrome
+CLIP1	Intellectual disability, autosomal recessive
+STAG2	Diaphragmatic hernia, congenital  |Intellectual disability  
+CHCHD2	Parkinson disease, autosomal dominant
+fastkd2i1	Cerebellar ataxia  
+foxp1i6	Developmental delay & speech impairment
+wnk1tv4	Cerebellar ataxia  
+CALN1	Infantile spasms
+NEDD4	Infantile spasms
+AGAP1	Cerebral palsy  
+CD99L2	Cerebral palsy  
+COA3	Neuropathy, exercise intolerance, obesity & short stature
+KDM7A	Cerebral palsy  
+NAA35	Cerebral palsy  
+pak3tv6	Cerebral palsy  
+WIPI2	Cerebral palsy  
+KAT6A	Hypotonia, intellectual disability, feeding/oromotor difficulties, microcephaly/craniosynostosis, cardiac & facial defects|Microcephaly, developmental delay & craniofacial dysmorphism
+P4HB	Amyotrophic lateral sclerosis, predisposition to|Cole-Carpenter syndrome
+DCLK2	Hereditary motor & sensory neuropathy, phenotype modifier
+FOXI3	Aural atresia, microtia & internal carotid artery agenesis
+APC2	Sotos-like syndrome
+SUCO	Mesial temporal lobe epilepsy
+CD300LF	Autism spectrum disorder
+EZR	Intellectual disability  
+LOXL3	Stickler syndrome
+rps24id	Autism spectrum disorder
+SOCS4	Autoimmunity  
+CRIM1	Colobomatous macrophthalmia with microcornea syndrome
+MRPS7	Sensorineural deafness, progressive hepatic & renal failure & lactic acidaemia
+gnei3	Inclusion body myositis
+ELMO1	Dravet syndrome, atypical
+HS2ST1	Dravet syndrome   
+SLC7A11	Febrile seizures plus
+WNT6	Recurrent miscarriage 
+POC5	Scoliosis 
+ldb3i3	Myofibrillar myopathy 
+SEMA3C	Hirschsprung disease  
+AFF4	Cognitive impairment & coarse facies, heart defects, obesity, pulmonary involvement & short stature
+SIK1	Myoclonic encephalopathy|Developmental epilepsy
+TAX1BP3	Cardiomyopathy, dilated with septo-optic dysplasia
+GPR180	Goniodysgenesis|Microcoria
+NDUFB11	Histiocytoid cardiomyopathy|Microphthalmia with linear skin lesions
+sgk1tv2	Chorioretinopathy, central serous
+DGKB	Short stature    
+NRP1	Truncus arteriosus
+RUNDC1	Glioma  
+SYT1	Dyskinetic movement disorder, motor delay & cognitive impairment
+P4HA2	High myopia, non-syndromic
+RPL27	Diamond-Blackfan anaemia
+RPS27	Diamond-Blackfan anaemia
+BIRC6	Autism spectrum disorder
+KRT24	Autism spectrum disorder
+LRRC7	Autism spectrum disorder
+UTP6	Autism spectrum disorder
+ZNF559	Autism spectrum disorder
+ZNF774	Autism spectrum disorder
+ATP4A	Gastric neuroendocrine tumour, type 1
+MMP21	Heterotaxy  
+HIST1H1E	Intellectual disability  |Lung cancer, lower risk, association with
+LIN7B	Autism spectrum disorder
+ATP9B	Hailey-Hailey disease, modifier of
+NFXL1	Specific language impairment|Specific language impairment, increased risk
+PCGF2	Developmental disorder  
+AK5	Intellectual disability  
+SPARC	Osteogenesis imperfecta  |Osteoporosis, association with 
+DDX41	Secondary acute myeloid leukaemia|Refractory cytopaenia with multilineage dysplasia|Refractory anaemia with excess blasts, type 1|Acute myeloid leukaemia 
+PARN	Pulmonary fibrosis  |Dyskeratosis congenita
+DCPS	Intellectual disability  
+EDC3	Intellectual disability  
+GDF7	Heterotaxy  
+IL17RC	IL-17RC deficiency
+MNDA	Heterotaxy  
+OSTC	Heterotaxy  
+SMO	Medulloblastoma  
+CAD	Glycosylation disorder
+PDIA3	Amyotrophic lateral sclerosis, predisposition to
+plec1a	Epidermolysis bullosa simplex 
+COG2	Congenital disorder of glycosylation  
+POLR1A	Acrofacial dysostosis
+PYCR2	Microcephaly & hypomyelination
+CPT1C	Spastic paraplegia, autosomal dominant
+MYL4	Atrial fibrillation, early-onset
+MT1X	Zinc deficiency, in Wilson disease
+GAS8	Sperm immotility
+ETV4	Colorectal cancer 
+FZD10	Colorectal cancer 
+MAST2	Colorectal cancer 
+AZGP1	Obesity, early-onset
+STYXL1	Intellectual disability, epilepsy and behavioural complexities
+FZD2	Omodysplasia, autosomal dominant
+PMPCA	Cerebellar ataxia  
+KANK4	Nephrotic syndrome, steroid resistant
+PBRM1	Renal cell carcinoma
+RNF31	Autoinflammation, immunodeficiency, amylopectinosis & lymphangiectasia
+ADGRF4	Schizophrenia  
+ARSG	Writer's cramp, increased risk|Musician's dystonia
+KCNV1	Autism spectrum disorder
+SOS2	Noonan syndrome
+SPATA5	Schizophrenia  
+TEKT5	Schizophrenia  
+DOCK2	DOCK2 deficiency
+FBXO24	Gastric cancer  
+HNRNPA0	Cancer, increased risk  
+SEMA6B	Autism spectrum disorder
+WIF1	Cancer, increased risk  
+ARHGAP21	Mandibular prognathism
+ADGRG6	Arthrogryposis multiplex congenita  
+DRAM2	Retinal dystrophy with early macular involvement
+DYNC2LI1	Jeune-like syndrome|Short rib-polydactyly syndrome 
+RECQL	Breast cancer  
+KIAA0586	Ciliopathy  |Joubert syndrome
+CDKN3	Schizophrenia  
+GPR85	Autism spectrum disorder
+PIGC	Hydrops fetalis, nonimmune
+SIGIRR	Necrotizing enterocolitis
+UBN1	Hydrops fetalis, nonimmune
+FCRL4	Hydrops fetalis, nonimmune
+GALNT14	Hydrops fetalis, nonimmune
+PTPRS	Neural tube defects
+THSD1	Hydrops fetalis, nonimmune
+OCEL1	Aicardi syndrome
+PI4KA	Perisylvian polymicrogyria, cerebellar hypoplasia & arthrogryposis|Long QT syndrome  
+SASH1	Pigmentation defects, palmoplantar keratoderma & skin carcinoma
+DLEC1	Breast cancer  
+HSPA2	Azoospermia  
+LRRC4C	Azoospermia  |Male infertility  
+MYRIP	Male infertility  
+PDE3A	Hypertension, dominant with brachydactyly
+TEX11	Azoospermia with mixed testicular atrophy|Male infertility  
+SLC1A4	Developmental delay, microcephaly & hypomyelination|Intellectual disability & microcephaly  
+SEC16A	Axial spondyloarthritis
+ARHGEF1	Coarctation of the aorta 
+CCND3	Coarctation of the aorta 
+SCYL1	Coarctation of the aorta 
+SMTN	Coarctation of the aorta 
+VAX2	Optic atrophy & photoreceptor degeneration
+APPL1	Familial Diabetes mellitus
+COPA	Autoimmune-mediated lung disease and arthritis
+IPMK	Small intestinal carcinoid
+XPR1	Primary familial brain calcification
+ADAMTS19	Premature ovarian failure 
+CIT	Long QT syndrome  
+CLCA4	Cryptozoospermia
+KIF21B	Long QT syndrome  
+SIRT6	Long QT syndrome  
+SLC2A5	Long QT syndrome  
+SV2A	Intractable epilepsy, involuntary movements, microcephaly, and development and growth retardation
+WDR26	Long QT syndrome  
+DLX4	Orofacial clefting 
+ANKLE2	Microcephaly  
+PCDH7	Epilepsy  
+RORB	Epilepsy  
+TSNARE1	Epilepsy  
+VGF	Neurobehavioural disorder & mental retardation
+CTU2	Intellectual disability  
+KIF19	Intellectual disability  
+LRRC10	Cardiomyopathy, dilated
+COL6A6	Myopathy  
+MIR204	Retinal dystrophy 
+SCNM1	Epilepsy, idiopathic generalised 
+PRDM12	Congenital insensitivity to pain
+RNASEH1	Mitochondrial encephalomyopathy, adult-onset
+CCDC160	Moebius syndrome
+CD9	Breast cancer  
+lama3tv1	Breast cancer    
+MCAT	Breast cancer     
+RSPH3	Primary ciliary dyskinesia with central complex defects
+ZNF217	Breast cancer    
+RBP5	Total anomalous pulmonary venous return
+RDH10	Total anomalous pulmonary venous return
+TCTEX1D2	Jeune asphyxiating thoracic dystrophy
+igf2tv3	Intrauterine and postnatal growth restriction
+SRRM2	Papillary thyroid carcinoma 
+pcdh15tva	Leber congenital amaurosis
+CDO1	Diaphragmatic hernia, congenital  
+DLST	Diaphragmatic hernia, congenital  
+PPAPDC2	Diaphragmatic hernia, congenital  
+PTPN12	Diaphragmatic hernia, congenital  
+SIN3A	Diaphragmatic hernia, congenital  
+SLC5A9	Diaphragmatic hernia, congenital  
+TLN1	Diaphragmatic hernia, congenital  
+DBX2	Intellectual disability & growth delay
+mitftv3	Sensorineural hearing loss  
+SLC30A6	Autism spectrum disorder
+FER	Autism spectrum disorder
+GPR149	Autism spectrum disorder
+LSS	Cataract  
+SLC7A3	Autism spectrum disorder
+ADGRF1	Autism spectrum disorder
+HELLS	Immunodeficiency, centromeric instability and facial anomalies syndrome, type 4
+KCNMA1tv3	Early onset paroxysmal dyskinesia and developmental delay
+MYO16	Autism spectrum disorder
+PLVAP	Hypoproteinaemia, hypoalbuminaemia, and hypertriglyceridaemia
+PSD3	Autism spectrum disorder
+RORC	Inborn errors of immunity
+POLD3	Colorectal adenoma/carcinoma
+TRMT5	Multiple respiratory-chain deficiencies
+HEY2	Congenital heart defects & cognitive impairment
+EPS8L2	Hearing loss, autosomal recessive
+SKIL	Intraductal papillary mucinous neoplasm
+DEFA4	IgA nephropathy 
+MYCT1	IgA nephropathy  
+SYPL2	Obesity, association with
+CD164	Hearing impairment, nonsyndromic
+CFAP52	Heterotaxy, visceral & situs inversus totalis
+CNGA2	Anosmia, isolated congenital
+PTPN4	Rett-like syndrome
+NLRP5	Multilocus imprinting disorder
+AK7	Primary ciliary dyskinesia  

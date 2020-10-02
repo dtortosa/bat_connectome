@@ -1,0 +1,19 @@
+Instructions taken from "http://lab.rockefeller.edu/casanova/HGC":
+
+    -Ensure that the R and Python programming languages and the Python Package NetworkX and the R package APE are installed.
+
+    -Create a text file called gene_list.txt for the list of human gene names to be clustered, as in (1). You should delete "" (i.e. gene_name instead of "gene_name")
+
+    -Download the files Nodes_binding_10.00.txt, Edges_binding_10.txt, HGC_matrix.py, and FGA_plot.R into the same folder as list.txt
+
+    -Modify HGC_matrix.py: 
+        -"/Users/yuval/Desktop/Connectome/9.05/combined_all_condensed_9.05.txt" change by "path/to/Edges_binding_10.txt"
+        -"Nodes_binding_9.05.txt" change by "Nodes_binding_10.00.txt"
+
+    -Modify FGA_plot.R to assign tip color according to the existence of evidence about implication of each gen with BAT.     
+
+    -Open a terminal window and go to the folder containing the files, as in (1). Type: python HGC_matrix.py. Type: Rscript FGA_plot.R
+
+    -The biological distances clustering plot is named FGA_tree.pdf
+
+    -If the fonts and/or page size are not appropriate then open the file FGA_plot.R in a text editor. Change "width" and "height" to control page size, and change "cex" to control font size. Alternatively refer to the R "ape" manual: http://cran.r-project.org/web/packages/ape/index.html. Save the file and rerun.
