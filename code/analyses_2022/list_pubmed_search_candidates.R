@@ -1,5 +1,29 @@
-library(easyPubMed)
-	library(R.utils)
+#!/usr/bin/env Rscript
+
+#This is done to have the possibility to run this script as an executable: 'chmod +x myscript.R' and then ' ./myscript.R'. If you run the script as 'R CMD BATCH myscript.R', i THINK this is not used, because it is annotated. 
+	#https://www.jonzelner.net/statistics/make/docker/reproducibility/2016/05/31/script-is-a-program/
+
+#In case you run this script as an executable, you can save the output without warnings "./myscript.R > myscript.Rout" or with errors "./myscript.R &> myscript.Rout"
+	#https://askubuntu.com/questions/420981/how-do-i-save-terminal-output-to-a-file
+
+
+
+######################################################################################
+####################### PUBMED SEARCH CANDIDATES #####################################
+######################################################################################
+
+#extract the title of papers obtained for a search about each of the 107 BAT candidates and BAT functioning
+
+
+
+#################################################################
+####################### REQUIRED PACKAGES #######################
+#################################################################
+
+library(easyPubMed) #to connect to pubmed: 	
+	#https://cran.r-project.org/web/packages/easyPubMed/vignettes/getting_started_with_easyPubMed.html
+library(R.utils) #to stop processes taking too much time
+
 
 
 #############################################
@@ -36,41 +60,60 @@ unknown_bat_genes = bat_relationship[which(bat_relationship$BAT.relationship == 
 
 
 
+#####################################
+######## MAKE THE SEARCH  ###########
+#####################################
+
+#open an empty list for the abstract
 list_abstracts = list()
+
+#for each unknown BAT gene, i.e., candidate
 for(i in 1:length(unknown_bat_genes)){
 
+	#select the [i] candidate
 	selected_unknown_bat_gene = unknown_bat_genes[i]
 
+	#use the exact same query used my Jose when looking for gen-BAT association
 	my_query <- paste('(((("Adipose Tissue, Brown"[Mesh] OR "Brown Fat" OR "Brown adipose tissue"))) OR (("Adipose tissue, beige"[Mesh] OR "beige adipose tissue" OR "Brite fat" OR "beige fat")))AND(', selected_unknown_bat_gene, ')', sep="")
+	
+	#make the query
 	my_entrez_id <- get_pubmed_ids(my_query)
-	#my_abstracts_txt <- fetch_pubmed_data(my_entrez_id, format = "abstract")
-	#my_abstracts_txt
+		#Query PubMed (Entrez) in a simple way via the PubMed API eSearch function. Calling this function results in posting the query results on the PubMed History Server. This allows later access to the resulting data via the fetch_pubmed_data() function, or other easyPubMed functions.
 	
-	#https://cran.r-project.org/web/packages/easyPubMed/vignettes/getting_started_with_easyPubMed.html
+	#extract the titles of the papers with fetch_pubmed_data
+	my_titles_xml = withTimeout(fetch_pubmed_data(pubmed_id_list = my_entrez_id), timeout=5, onTimeout="warning")
+		#we make an envelop with withTimeout in order to avoid too much time looking. I have detected that the function gets stuck if there are no results. We limit the execution time to 2 seconds. If the limit is surpass, a warning is generated and save in the corresponding object. 
+			#https://stackoverflow.com/questions/31462416/r-set-execution-time-limit-in-loop
+		#you can also use fetch_pubmed_data to load the abstracts
+			#my_abstracts_txt <- fetch_pubmed_data(my_entrez_id, format = "abstract")
 
-	my_abstracts_xml = withTimeout(fetch_pubmed_data(pubmed_id_list = my_entrez_id), timeout=2, onTimeout="warning")
-		#https://stackoverflow.com/questions/31462416/r-set-execution-time-limit-in-loop
+	#extract the titles from the xml file
+	my_titles <- custom_grep(my_titles_xml, tag="ArticleTitle", format="char")
+		#Extract text form a string containing XML or HTML tags. Text included between tags of interest will be returned. If multiple tagged substrings are found, they will be returned as different elements of a list or character vector.
 
-	my_titles <- custom_grep(my_abstracts_xml, "ArticleTitle", "char")
-	
-	# use gsub to remove the tag, also trim long titles
+	#use gsub to remove the tag, also trim long titles
 	#TTM <- nchar(my_titles) > 75
 	#my_titles[TTM] <- paste(substr(my_titles[TTM], 1, 70), "...", sep = "")
 	
-	# Print as a data.frame (use kable)
-	head(my_titles)
+	#if we do not have the warning saved in my_titles_xml
+	if(!grepl("reached", my_titles_xml)){
 
-	if(!grepl("reached", my_abstracts_xml)){
+		#save the titles as the [[i]] element of the list
 		list_abstracts[[i]] <- my_titles
-	} else {
+	} else { #if not, and then, not title was obtained
+
+		#save NA in the [[i]] position
 		list_abstracts[[i]] <- NA	
 	}
+
+	#set the gene name
+	names(list_abstracts)[[i]] = selected_unknown_bat_gene
 }
 
-names(list_abstracts) = unknown_bat_genes
+#check
+length(list_abstracts) == length(unknown_bat_genes)
+!FALSE %in% c(names(list_abstracts) == unknown_bat_genes)
 
 
-
-
-save.image("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/human_genome_connectome/bat_connectome/results/results_2022/list_pubmed_search_candidates.RData")
-
+save.image("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/human_genome_connectome/bat_connectome/results/results_2022/list_pubmed_search_candidates_2.RData")
+#load("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/human_genome_connectome/bat_connectome/results/results_2022/list_pubmed_search_candidates.RData")
