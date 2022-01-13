@@ -1,11 +1,13 @@
 *.csv
 *.Rout
 *.RData
+*.doc
 /ms
 /data
 /results
 *DS_Store
-literature
+*.pdf
+*.docx
 *.aux
 *.bbl
 *.blg

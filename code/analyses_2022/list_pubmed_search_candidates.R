@@ -87,17 +87,17 @@ for(i in 1:length(unknown_bat_genes)){
 		#you can also use fetch_pubmed_data to load the abstracts
 			#my_abstracts_txt <- fetch_pubmed_data(my_entrez_id, format = "abstract")
 
-	#extract the titles from the xml file
-	my_titles <- custom_grep(my_titles_xml, tag="ArticleTitle", format="char")
-		#Extract text form a string containing XML or HTML tags. Text included between tags of interest will be returned. If multiple tagged substrings are found, they will be returned as different elements of a list or character vector.
-
-	#use gsub to remove the tag, also trim long titles
-	#TTM <- nchar(my_titles) > 75
-	#my_titles[TTM] <- paste(substr(my_titles[TTM], 1, 70), "...", sep = "")
-	
 	#if we do not have the warning saved in my_titles_xml
 	if(!grepl("reached", my_titles_xml)){
 
+		#extract the titles from the xml file
+		my_titles <- custom_grep(my_titles_xml, tag="ArticleTitle", format="char")
+			#Extract text form a string containing XML or HTML tags. Text included between tags of interest will be returned. If multiple tagged substrings are found, they will be returned as different elements of a list or character vector.
+
+		#use gsub to remove the tag, also trim long titles
+		#TTM <- nchar(my_titles) > 75
+		#my_titles[TTM] <- paste(substr(my_titles[TTM], 1, 70), "...", sep = "")
+		
 		#save the titles as the [[i]] element of the list
 		list_abstracts[[i]] <- my_titles
 	} else { #if not, and then, not title was obtained
@@ -107,7 +107,7 @@ for(i in 1:length(unknown_bat_genes)){
 	}
 
 	#set the gene name
-	names(list_abstracts)[[i]] = selected_unknown_bat_gene
+	names(list_abstracts)[[i]] = as.character(selected_unknown_bat_gene)
 }
 
 #check
@@ -115,5 +115,6 @@ length(list_abstracts) == length(unknown_bat_genes)
 !FALSE %in% c(names(list_abstracts) == unknown_bat_genes)
 
 
+#COMPARA CON EL RADATA.ORIGINAL
 save.image("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/human_genome_connectome/bat_connectome/results/results_2022/list_pubmed_search_candidates_2.RData")
 #load("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/human_genome_connectome/bat_connectome/results/results_2022/list_pubmed_search_candidates.RData")
