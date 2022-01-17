@@ -115,6 +115,6 @@ length(list_abstracts) == length(unknown_bat_genes)
 !FALSE %in% c(names(list_abstracts) == unknown_bat_genes)
 
 
-#COMPARA CON EL RADATA.ORIGINAL
-save.image("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/human_genome_connectome/bat_connectome/results/results_2022/list_pubmed_search_candidates_2.RData")
+#save image
+save.image("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/human_genome_connectome/bat_connectome/results/results_2022/list_pubmed_search_candidates.RData")
 #load("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/human_genome_connectome/bat_connectome/results/results_2022/list_pubmed_search_candidates.RData")
