@@ -312,43 +312,14 @@ extract_expression_data = function(selected_ids_bat_studies){
 			#A useful feature of arrayQualityMetrics is the possibility to show the results in the context of an experimental factor of interest, i. e. a categorical variable associated with the arrays such as hybridisation date, treatment level or replicate number. Specifying a factor does not change how the quality metrics are computed. By setting the argument intgroup to contain the names of one or multiple columns of the data object’s phenoData slot5 , a bar on the side of the heatmap with colours representing the respective factors is added. Similarly, the colours of the boxplots and density plots reflect the levels of the first of the factors named by intgroup.
 
 	#save the expression dataset
-	saveRDS(AEsetnorm_filter, paste(selected_ids_bat_studies, "/", selected_ids_bat_studies, "_expression.Rds", sep=""))
-	rm(AEsetnorm_filter) #remove
+	saveRDS(AEsetnorm, paste(selected_ids_bat_studies, "/", selected_ids_bat_studies, "_expression_non_filter.Rds", sep=""))
+	saveRDS(AEsetnorm_filter, paste(selected_ids_bat_studies, "/", selected_ids_bat_studies, "_expression_filter_1.Rds", sep=""))
 		#https://support.bioconductor.org/p/125920/
 
-	#in case you want to read it
-	#AEsetnorm_filter <- readRDS(paste(selected_ids_bat_studies, "/", selected_ids_bat_studies, "_expression.Rds", sep=""))
 
-
-	##calculate differential expression between WAT and BAT
+	##gene annotation
 	
-	#MIRA
-	#https://www.bioconductor.org/packages/release/workflows/vignettes/maEndToEnd/inst/doc/MA-Workflow.html#12_Linear_models
-
-
-#ESTAS LINEAS SON DEL ARRAYEXPRESS TUTORIAL
-#Now that we have ensured that the data are well processed, we can search for differentially expressed genes using the package limma. To understand the details of each steps, please see the limma user guide.
-library("limma")
-facs = pData(AEsetnorm_filter)[,column_filter_names]
-f = factor(facs)
-design = model.matrix(~0+f)
-colnames(design) = levels(f)
-fit = lmFit(AEsetnorm_filter, design)
-cont.matrix = makeContrasts(BATvsWAT = BAT-WAT, levels=design)
-fit2 = contrasts.fit(fit, cont.matrix)
-fit2 = eBayes(fit2)
-
-#Here we end up with a list of genes that are differentially expressed between BAT and WAR, but one can perform other comparisons with the same data.
-res = topTable(fit2, coef = "BATvsWAT", adjust = "BH")
-
-#This could now be followed by an integrative analysis of the data, a complex and open-ended task for which essential tools are provided in the Bioconductor project: the quality of the datasets could be assessed with the help of the arrayQualityMetrics package (Kauffmann et al., 2009), they could be normalized and analysed for differential expression of genes and gene sets (Hahne et al., 2008), and the combination of different datasets is facilitated, for example, by the MergeMaid package (Cope et al., 2004).
-
-
-
-
-#VAMOS A MIRAR DIRECTMANETE CUANTOS DE LOS CANDIDATOS SE EXPRESAN EN EL BAT, HAY QUE BUSCAR UN CUTOFF Y ELIMINAR LOW EXPRESSED GENES, RPIMER CUARTIL DE MAS EXPRESADOS?. El revisor 2 no dice nada de expression diferencial, solo que analizemos transcriptoma data y validemos los candidatos como BAT markers. Necesitamos mostrar que hay candidatos altamente expresados en el BAT.
-#perdemos poder estadistico, pero ganamos mas finura en la parte biologica al mirar especificamente WAT vs BAT. El conectoma está vlaidadio estadisticamente, vmaos a hora a añadir info biologica.
-#si sale p-value, bien, si no, decimos que tenemos unos cuantos con eivdencia de upregulation y que aun asi los que no tenemos eviedncia pueden serlo, mira thyroid hormones. simplememte refinamos aun mas la lista.
+	#https://www.bioconductor.org/packages/release/workflows/vignettes/maEndToEnd/inst/doc/MA-Workflow.html#11_Annotation_of_the_transcript_clusters	
 
 
 #get a data.frame with rows representing genes and columns representing arrays. To know which columns go with that tissue or experimental treatment, we can rely on the phenoData information inherited from AEset_human.
@@ -361,13 +332,14 @@ expression_matrix = data.frame(exprs(AEsetnorm_filter))
 	#it makes sense to average expression across sex? but what about case/controls? or cold vs non cold?
 
 
-
 expression_matrix = merge(expression_matrix, apply(X=expression_matrix, MARGIN=1, FUN=median), by="row.names")
-
+row.names(expression_matrix) = expression_matrix$Row.names
+colnames(expression_matrix)[which(colnames(expression_matrix)=="y")] = "average_gene"
 str(expression_matrix)
 
-expression_matrix_average = expression_matrix[,"average_gene"]
-colnames(expression_matrix_average) = "average_gene_expression"
+expression_matrix_average = expression_matrix[,c("Row.names", "average_gene")]
+colnames(expression_matrix_average) = c("row_names", "average_gene_expression")
+str(expression_matrix_average)
 
 #we have to convert the probs ID of affy_hugene_1_0_st_v1 to the gene symbols used by Yuval
 	#https://www.biostars.org/p/69597/
@@ -416,7 +388,42 @@ merged_data_aggregated[which(duplicated(merged_data_aggregated$gene_symbol)),]
 
 merged_data_aggregated_ordered = merged_data_aggregated[order(merged_data_aggregated$average_gene_expression, decreasing=TRUE),]
 
-merged_data_aggregated_no_low_expression = merged_data_aggregated[which(merged_data_aggregated$average_gene_expression > quantile(merged_data_aggregated$average_gene_expression, probs=0.75)),]
+merged_data_aggregated_high_expression = merged_data_aggregated[which(merged_data_aggregated$average_gene_expression > quantile(merged_data_aggregated$average_gene_expression, probs=0.75)),]
+
+
+
+
+
+
+	#MIRA
+	#https://www.bioconductor.org/packages/release/workflows/vignettes/maEndToEnd/inst/doc/MA-Workflow.html#12_Linear_models
+
+
+	#book chapter differential expression between pops
+		#https://link.springer.com/content/pdf/10.1007%2F0-387-29362-0.pdf
+
+
+#ESTAS LINEAS SON DEL ARRAYEXPRESS TUTORIAL
+#Now that we have ensured that the data are well processed, we can search for differentially expressed genes using the package limma. To understand the details of each steps, please see the limma user guide.
+library("limma")
+facs = pData(AEsetnorm_filter)[,column_filter_names]
+f = factor(facs)
+design = model.matrix(~0+f)
+colnames(design) = levels(f)
+fit = lmFit(AEsetnorm_filter, design)
+cont.matrix = makeContrasts(BATvsWAT = BAT-WAT, levels=design)
+fit2 = contrasts.fit(fit, cont.matrix)
+fit2 = eBayes(fit2)
+
+#Here we end up with a list of genes that are differentially expressed between BAT and WAR, but one can perform other comparisons with the same data.
+res = topTable(fit2, coef = "BATvsWAT", adjust = "BH")
+
+#This could now be followed by an integrative analysis of the data, a complex and open-ended task for which essential tools are provided in the Bioconductor project: the quality of the datasets could be assessed with the help of the arrayQualityMetrics package (Kauffmann et al., 2009), they could be normalized and analysed for differential expression of genes and gene sets (Hahne et al., 2008), and the combination of different datasets is facilitated, for example, by the MergeMaid package (Cope et al., 2004).
+
+
+
+
+
 
 #############################################
 ######## READ THE BAT INFORMATION ###########
@@ -452,7 +459,7 @@ unknown_bat_genes = bat_relationship[which(bat_relationship$BAT.relationship == 
 
 
 #load the connectome with UCP1 as core gene
-ucp1_conn = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/open_projects/connectome/data/human_connectome/UCP1.txt", sep="\t", header=T)
+ucp1_conn = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/human_genome_connectome/bat_connectome/data/human_connectome/UCP1.txt", sep="\t", header=T)
 str(ucp1_conn)
 head(ucp1_conn)
 summary(ucp1_conn)
@@ -467,15 +474,21 @@ random_genes = all_genes[-which(all_genes %in% bat_relationship[which(bat_relati
 
 #threshold_top = 5000 #we cannot compare the median expression between sets, because we are going to have mutliple studies and I think it is not ok to combine arrays of different studies. Remember, that in each study, we compare the intensity signal of each array in order to detect outliers, e.g., arrays with a different level of background noise, which could bias results. we should do that with the arrays of all studies in order to combine them.
 
+
+#VAMOS A MIRAR DIRECTMANETE CUANTOS DE LOS CANDIDATOS SE EXPRESAN EN EL BAT, HAY QUE BUSCAR UN CUTOFF Y ELIMINAR LOW EXPRESSED GENES, RPIMER CUARTIL DE MAS EXPRESADOS?. El revisor 2 no dice nada de expression diferencial, solo que analizemos transcriptoma data y validemos los candidatos como BAT markers. Necesitamos mostrar que hay candidatos altamente expresados en el BAT.
+#perdemos poder estadistico, pero ganamos mas finura en la parte biologica al mirar especificamente WAT vs BAT. El conectoma está vlaidadio estadisticamente, vmaos a hora a añadir info biologica.
+#si sale p-value, bien, si no, decimos que tenemos unos cuantos con eivdencia de upregulation y que aun asi los que no tenemos eviedncia pueden serlo, mira thyroid hormones. simplememte refinamos aun mas la lista.
+
+
 #number_genes_candidate = length(which(unknown_bat_genes %in% merged_data_aggregated_ordered[1:threshold_top, "gene_symbols_probs"]))
-number_genes_candidate = length(which(unknown_bat_genes %in% merged_data_aggregated_no_low_expression$gene_symbols_probs))
+number_genes_candidate = length(which(unknown_bat_genes %in% merged_data_aggregated_high_expression$gene_symbols_probs))
 
 
 number_genes_random = NULL
-for(i in 1:10000){
+for(i in 1:100000){
 	random_expression_rows = sample(1:length(random_genes), length(unknown_bat_genes), replace=FALSE)
 	#number_genes_random = append(number_genes_random, length(which(random_genes[random_expression_rows] %in% merged_data_aggregated_ordered[1:threshold_top, "gene_symbols_probs"]))) #CHECK THE NUMBER OF RANDOM GENES WITH EXPRESSION DATA
-	number_genes_random = append(number_genes_random, length(which(random_genes[random_expression_rows] %in% merged_data_aggregated_no_low_expression$gene_symbols_probs))) #CHECK THE NUMBER OF RANDOM GENES WITH EXPRESSION DATA
+	number_genes_random = append(number_genes_random, length(which(random_genes[random_expression_rows] %in% merged_data_aggregated_high_expression$gene_symbols_probs))) #CHECK THE NUMBER OF RANDOM GENES WITH EXPRESSION DATA
 }
 
 
@@ -488,24 +501,7 @@ pval
 
 
 
-require(biomaRt)
-# replace the affyID with gene symbol
-mart <- useMart(biomart="ENSEMBL_MART_ENSEMBL", host="http://uswest.ensembl.org/", path="/biomart/martservice", dataset="hsapiens_gene_ensembl")
 
-hgnc <- getBM(attributes = c("affy_hugene_1_0_st_v1", "hgnc_symbol","ensembl_gene_id","entrezgene","chromosome_name","start_position","end_position","band"), filters = "affy_hugene_1_0_st_v1", values=tab$ID, mart = mart)
-	#pd.hugene.1.0.st.v1
-
-# Now match the array data probesets with the genes data frame
-m <- match(as.numeric(tab$ID), hgnc$affy_hugene_1_0_st_v1)
-# And append e.g. the HGNC symbol to the array data frame
-tab$hgnc <- hgnc[m, "hgnc_symbol"]
-	#https://www.biostars.org/p/69597/
-
-
-#there is an annotation tool for ugene_1_0_st_v1
-	#http://www.bioconductor.org/packages/release/data/annotation/html/pd.hugene.1.0.st.v1.html
-
-data(pmSequence) #make a try
 
 
 #THE FINAL OUTPUT OF THIS SCRIPT IS
