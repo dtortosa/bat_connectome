@@ -64,6 +64,7 @@ str(sets)
 ##select sets with raw data available
 #I prefer to select only those with raw data so I can process the data in the same way for all datasets. For example, if a dataset has been processed using RMA, expression has been log transformed, but not if the MAS5 processing was applied. Therefore gene expression of each study is not comparable. In our case, we are going to calculate tops in each dataset, but I think it is better to maintain the same treatment just in case...
 sets_raw=sets[which(sets$Raw=="yes"),]
+	#this considers only datasets with raw data STORED in ArrayExpress. Therefore, this discards cases with RNA-seq data stored in ENA. If a reviewer ask for it, we can try to include also this data.
 
 #check
 print("#########################################")
@@ -71,35 +72,42 @@ print("CHECK THAT ALL DATASETS HAVE DATA FOR HUMANS AND INCLUDE RAW DATA")
 print(length(which(sets_raw$Raw != "yes"))==0 & length(which(!grepl("Homo sapiens", sets_raw$Species)))==0)
 print("#########################################")
 
+#Note that we have stopped the regular imports of Gene Expression Omnibus (GEO) data into ArrayExpress. So, for GEOD datasets, the stored version may not be the latest version of the experiment.
 
-##select only those experiments measuring gene expression at BAT
+
+##select only those experiments measuring gene expression at BAT AND raw data
+
 #sets with BAT data
-	#https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-8564/?keywords=brown+adipose+tissue&organism=Human&exptype%5B%5D=&exptype%5B%5D=&array=
-	#https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-4031/?keywords=brown+adipose+tissue&organism=Homo+sapiens&exptype%5B%5D=&exptype%5B%5D=&array=
-	#https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-56635/?keywords=brown+adipose+tissue&organism=Homo+sapiens&exptype%5B%5D=&exptype%5B%5D=&array=
-	#https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-2602/?keywords=brown+adipose+tissue&organism=Homo+sapiens&exptype%5B%5D=&exptype%5B%5D=&array=
-	#https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-57896/?keywords=brown+adipose+tissue&organism=Homo+sapiens&exptype%5B%5D=&exptype%5B%5D=&array=
-	#https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-49795/?keywords=brown+adipose+tissue&organism=Homo+sapiens&exptype%5B%5D=&exptype%5B%5D=&array=
-	#https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-27657/?keywords=brown+adipose+tissue&organism=Homo+sapiens&exptype%5B%5D=&exptype%5B%5D=&array=
-	#https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-19643/?keywords=brown+adipose+tissue&organism=Homo+sapiens&exptype%5B%5D=&exptype%5B%5D=&array=
+bat_datasets_info = list() #empty list to save info
+#E-GEOD-56635
+bat_datasets_info[[1]] = list(
+	dataset="E-GEOD-56635",
+	paper="Reprogrammed Functional Brown Adipocytes Ameliorate Insulin Resistance and Dyslipidemia in Diet-Induced Obesity and Type 2 Diabetes (doi:10.1016/j.stemcr.2015.08.007)",
+	url="https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-56635/?keywords=brown+adipose+tissue&organism=Homo+sapiens&exptype%5B%5D=&exptype%5B%5D=&array=",
+	details_bat="The original publication says that the accession number for the microarray data reported is GSE52817, but that number connect to data for the transformation of fibroblasts to osteoblasts. In contrast, the paper explains that created two types of brown adipocytes: i) iBA (induced brown adipocytes), coming from human induced pluripotent stem cells (iPSCs). After 12 days, 75% of the cells showed BA-like appearance (multilocular lipid droplets and abound mitochondria. They also showed high expression BAT markers (UCP1, CIDEA and DIO2); dBA: Direct conversion from human fibroblasts. They used retroviruses to include reprogramming factor genes. CM-transduced genes were considered dBAs, being more than 90% of them UCP1 positive. They expressed mRNA of UCP1, CIDE and ADIPOQ at high levels compared to fibroblasts. Therefore, we can obtain gene expression data from cells showing BAT-like phenotypes: iBAs and dBAs. There are also mouse cells, but our script will select only human cells (see below).", 
+	detail_date="The dataset was updated 19 August 2015 for the last time in ArrayExpress, and the corresponding paper was published in 13 October 2015. Therefore, this is likely the last version of the dataset.")
 
-#brown preadipocytes
-	#https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-68544/?keywords=brown+adipose+tissue&organism=Homo+sapiens&exptype%5B%5D=&exptype%5B%5D=&array=
+#E-GEOD-19643
+bat_datasets_info[[2]] = list(
+	dataset="E-GEOD-19643",
+	paper="PGC-1 alpha mediates differentiation of mesenchymal stem cells to brown adipose cells (doi:10.5551/jat.7401)",
+	url="https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-19643/?query=brown+adipose+tissue&organism=Homo+sapiens&exptype%5B%5D=%22rna+assay%22",
+	details_bat="CHECK, it seems they created BAT-like cells from pluripotent cells using PGC-1 alpha, and there is an increase of UCP1 in these transformed cells.")
 
-#it seems but not sure
-	#https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-54280/?keywords=brown+adipose+tissue&organism=Homo+sapiens&exptype%5B%5D=&exptype%5B%5D=&array=
-	#https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-25/?keywords=brown+adipose+tissue&organism=Homo+sapiens&exptype%5B%5D=&exptype%5B%5D=&array=
+#E-GEOD-27657
+bat_datasets_info[[3]] = list(dataset="E-GEOD-27657")
 
-#strange case report of BAT in visceral fat
-	#https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-49795/?keywords=brown+adipose+tissue&organism=Homo+sapiens&exptype%5B%5D=&exptype%5B%5D=&array=
-
-#set with expression done on WAT before and after cold exposure
-	#https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-67297/?keywords=brown+adipose+tissue&organism=Homo+sapiens&exptype%5B%5D=&exptype%5B%5D=&array=
+#E-GEOD-54280
+bat_datasets_info[[4]] = list(dataset="E-GEOD-54280")
 
 #create a vector with the IDs
-ids_bat_studies = c("E-MTAB-25", "E-GEOD-56635")
+ids_bat_studies = c("E-GEOD-56635", "E-GEOD-19643", "E-GEOD-27657", "E-GEOD-54280")
 	#E-MTAB-25 fail, Error in `.rowNamesDF<-`(x, value = value) :  duplicate 'row.names' are not allowed
 		#maybe: https://www.biostars.org/p/62988/
+
+#IMPORTANT: Files of some studies cannot be loaded, the error is duplicated row.names. Maybe you can dowload separately each part (getAE) and create the ExpressionSet file by yourself
+
+
 
 
 #######################################
@@ -114,7 +122,7 @@ getOption('timeout')
 
 
 ##write a function to do that
-#selected_ids_bat_studies=ids_bat_studies[2] #for debugging
+#selected_ids_bat_studies=ids_bat_studies[1] #for debugging
 extract_expression_data = function(selected_ids_bat_studies){
 
 	#make a directory for the selected dataset
@@ -167,7 +175,7 @@ extract_expression_data = function(selected_ids_bat_studies){
 	}
 	
 	#make some checks to avoid datasets without HuGenes
-	if(!grepl("hugene", AEset_human@annotation, fixed=TRUE)){
+	if(!grepl("hugene", AEset_human@annotation, fixed=TRUE) & !grepl("hg", AEset_human@annotation, fixed=TRUE)){
 		print("###############################################")
 		stop(paste(selected_ids_bat_studies, " HAS NO HUMAN GENES", sep=""))
 		print("###############################################")
@@ -204,9 +212,11 @@ extract_expression_data = function(selected_ids_bat_studies){
 	#background subtraction
 	#The oligo package implements background subtraction through the backgroundCorrect command. The method currently available is the one used in RMA, which treats the signal intensities of the perfect match (PM) probes as a convolution of noise and true signal. Additional methods will be available on future releases and choices will be made with the method argument (currently, the default is ’rma’).
 		#see this link for PM probes (https://online.stat.psu.edu/stat555/node/28/)
+	if(FALSE){
 	bg_AEset_human = backgroundCorrect(object=AEset_human, method="rma")
 		#object: Object containing probe intensities to be preprocessed.
 		#method: String determining which method to use at that preprocessing step
+	}
 
 	#you can compare the probe intensities with and without background correction
 	if(FALSE){ #in the oligo user guide, you can see how without background correction there is more noise
@@ -216,10 +226,12 @@ extract_expression_data = function(selected_ids_bat_studies){
 	}
 
 	#Normalization
-	#The normalize method provided by oligo allows the user to normalize the input data. Normalization is intended to remove from the intensity measures any systematic trends which arise from the microarray technology rather than from differences between the probes or between the target RNA samples hybridized to the arrays. Different normalization methods are available. The available options are given by normalizationMethods and the argument method in normalize is used to select the normalization approach to be used. 
+	#The normalize method provided by oligo allows the user to normalize the input data. Normalization is intended to remove from the intensity measures any systematic trends which arise from the microarray technology rather than from differences between the probes or between the target RNA samples hybridized to the arrays. Different normalization methods are available. The available options are given by normalizationMethods and the argument method in normalize is used to select the normalization approach to be used.
+	if(FALSE){
 	norm_bg_AEset_human <- normalize(object=bg_AEset_human)
 		#object: A data object, typically containing microarray data.
-
+	}
+	
 	#Summarization
 	#Summarizing the MULTIPLE probes per probeset to get a value at the probeset level. We use the same method used in RMA, which is median polish. 
 	#summ_norm_bg_AEset_human = summarize(object=norm_bg_AEset_human, method="medianpolish") #NOT WORKING
@@ -240,7 +252,7 @@ extract_expression_data = function(selected_ids_bat_studies){
 		#https://www.biostars.org/p/7687/
 
 	#do all the steps of preprocessing with the RMA normalization using the oligo package
-	AEsetnorm = oligo::rma(AEset_human, background=TRUE, normalize=TRUE, target="core")
+	AEsetnorm = oligo::rma(AEset_human, background=TRUE, normalize=TRUE)
 		#the tutorial says affy:rma, but for me it does not work. I have to use oligo::rma. In addition, affy is much older.
 			#https://support.bioconductor.org/p/71097/
 		#oligo::rma
@@ -296,6 +308,23 @@ extract_expression_data = function(selected_ids_bat_studies){
 
 		#save the names of the selected arrays
 		selected_arrays = selected_arrays[bat_arrays_index]
+	}
+	if(selected_ids_bat_studies == "E-GEOD-19643"){
+
+		#select arrays that do not come from 
+		bat_arrays_index = which(!grepl("PGC-1 alpha", AEsetnorm$Comment..Sample_source_name., fixed=TRUE))
+			#You can use pData to access to the phenotypic data (e.g., covariates) and meta-data (e.g., descriptions of covariates) associated with an experiment.
+			#The quality metrics are better after removing WAT arrays.
+
+		#save the column used to filter
+		column_filter_names = "Comment..Sample_source_name."
+
+		#save the names of the selected arrays
+		selected_arrays = selected_arrays[bat_arrays_index]
+	}
+	if(selected_ids_bat_studies == "E-GEOD-27657"){
+	}
+	if(selected_ids_bat_studies == "E-GEOD-54280"){
 	}
 
 	#select only the arrays we are interested

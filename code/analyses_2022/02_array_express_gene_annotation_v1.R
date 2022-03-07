@@ -3,6 +3,10 @@
 	
 	#https://www.bioconductor.org/packages/release/workflows/vignettes/maEndToEnd/inst/doc/MA-Workflow.html#11_Annotation_of_the_transcript_clusters	
 
+	#Traditionally, Affymetrix arrays (the so-called 3’ IVT arrays) were probeset based: a certain fixed group of probes were part of a probeset which represented a certain gene or transcript (note however, that a gene can be represented by multiple probesets). The more recent “Gene” and “Exon” Affymetrix arrays are exon based and hence there are two levels of summarization to get to the gene level. The “probeset” summarization leads to the exon level. The gene / transcript level is given by “transcript clusters”. Hence, the appropriate annotation package for our chip type is called hugene10sttranscriptcluster.db.
+	#On the left side, we see plenty of probes for each Exon / probeset (i.e. each colour): therefore, a summarization on the probeset / exon level makes sense. In the gene type array, however, only a small proportion of the original probes per probeset is included. Thus, a summarization on the probeset / exon level is not recommended for “Gene” arrays but nonetheless possible by using the hugene10stprobeset.db annotation package. Note that furthermore, there are also no longer designated match/mismatch probes present on “Gene” and “Exon” type chips. The mismatch probe was initially intended as base-level for background correction, but hasn’t prevailed due to more elaborate background correction techniques that do not require a mismatch probe.
+		#https://www.bioconductor.org/packages/release/workflows/vignettes/maEndToEnd/inst/doc/MA-Workflow.html#74_Old_and_new_%E2%80%9Cprobesets%E2%80%9D_of_Affymetrix_microarrays
+
 	#HAY QUE REVISAR QUE EL MISMO TRANSCRITO NO ESTÁ ASOCIADO A DIFERENTES GENES, ESOS CASOS HAY QUE QUITARLOS
 		#https://www.bioconductor.org/packages/release/workflows/vignettes/maEndToEnd/inst/doc/MA-Workflow.html#111_Removing_multiple_mappings
 
@@ -28,7 +32,7 @@ str(expression_matrix_average)
 #we have to convert the probs ID of affy_hugene_1_0_st_v1 to the gene symbols used by Yuval
 	#https://www.biostars.org/p/69597/
 	#https://support.bioconductor.org/p/42839/
-
+#require(hgu133plus2.db)
 require(hugene10sttranscriptcluster.db) #I guess hu gene 10 is hugene_1_0... I ahve seen the same for hugene20 as hugene_2_0
 tail(keys(hugene10sttranscriptcluster.db, keytype="SYMBOL"))
 k <- keys(hugene10sttranscriptcluster.db, keytype="PROBEID")
@@ -177,6 +181,8 @@ random_genes = all_genes[-which(all_genes %in% bat_relationship[which(bat_relati
 #number_genes_candidate = length(which(unknown_bat_genes %in% merged_data_aggregated_ordered[1:threshold_top, "gene_symbols_probs"]))
 number_genes_candidate = length(which(unknown_bat_genes %in% merged_data_aggregated_high_expression$gene_symbols_probs))
 
+
+#NO VAMOS A HACER TEST, PORQUE VA CAMBIANDO SEGUN LOS ESTUDIOS QUE INCLUIMOS, HAY QUE TENER EN CUENTA QUE NO TENEMOS UNA CURACION DE TODOS LOS ESTUDIOS ANALIZANDO BAT... ESTE TEJIDO NO ESTA EN GTEEX... ASI QUE MEJOR DECIR QUE TENEMOS XX CANDIDATOS ENTRE EL PRIMER CUARTIL  DE TODOS LOS ESTUDIOS CONSIDERADOS Y PUNTO... ASI SI NOS PIDEN MAS ESTUDIOS, ESO NO VA A CAMBIAR...
 
 number_genes_random = NULL
 for(i in 1:100000){
