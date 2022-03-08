@@ -1,7 +1,152 @@
+#!/usr/bin/env Rscript
+
+#This is done to have the possibility to run this script as an executable: 'chmod +x myscript.R' and then ' ./myscript.R'. If you run the script as 'R CMD BATCH myscript.R', i THINK this is not used, because it is annotated. 
+	#https://www.jonzelner.net/statistics/make/docker/reproducibility/2016/05/31/script-is-a-program/
+
+#In case you run this script as an executable, you can save the output without warnings "./myscript.R > myscript.Rout" or with errors "./myscript.R &> myscript.Rout"
+	#https://askubuntu.com/questions/420981/how-do-i-save-terminal-output-to-a-file
+
+
+
+####################################################################################
+########################## PREPROCESING GENE EXPRESSSION ###########################
+####################################################################################
+
+#Script for obtaining gene expression from ArrayExpress processed data
+
+#Part of the code of this script comes from
+	#a tutorial of ArrayExpress
+		#http://www.bioconductor.org/packages/release/bioc/vignettes/ArrayExpress/inst/doc/ArrayExpress.pdf
+	
+	#a book chapter about using CEL files to get genes different between populations, tissues..
+		#From CEL Files to Annotated Lists of Interesting Genes
+
+
+
+#################################################################
+####################### REQUIRED PACKAGES #######################
+#################################################################
+
+require(ArrayExpress) #for loading data from ArrayExpress
+require(arrayQualityMetrics) #for normalizing expression data in each dataset
+require(foreach) #for parallel
+require(doParallel) #for parallel
+
+
+
+########################################################
+####################### STARTING #######################
+########################################################
+
+#set working directory to results, because ArrayExpress save stuff during the analyses automatically
+wd="/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/human_genome_connectome/bat_connectome/results/results_2022"
+setwd(wd)
+
+#completely remove the previous folder with raw data
+system(paste("rm -rf array_express_gene_expression", sep=""))
+
+#create a directory to save the results and move to it
+system(paste("mkdir -p array_express_gene_expression", sep=""))
+	#use mkdir -p because if you don't and run again, you will get an error that it exists. "p" flags is for "no error if existing, make parent directories as needed"
+
+#load the RDS file with the information of all BAT datasets included in the analysis
+bat_datasets_info = readRDS("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/human_genome_connectome/bat_connectome/results/results_2022/array_express_raw/info_datasets.Rds")
+
+#extract the name of the datasets included
+ids_bat_studies = as.vector(unlist(sapply(X=bat_datasets_info, "[", "dataset")))
+
+
+
+########################################################################
+####################### CALCULATE GEN EXPRESSION #######################
+########################################################################
+
+
+##write a function to do that
+#selected_ids_bat_studies=ids_bat_studies[1] #for debugging
+extract_expression_data = function(selected_ids_bat_studies){
+
+	#make a directory for the selected dataset
+	system(paste("mkdir -p array_express_gene_expression/", selected_ids_bat_studies, sep=""))
+		#use mkdir -p because if you don't and run again, you will get an error that it exists. "p" flags is for "no error if existing, make parent directories as needed"
+
+	#see one specific dataset
+	print("###############################################")
+	print(paste("STARTING", selected_ids_bat_studies, ": ", sep=""))
+	print("###############################################")
+
+
+	#load the AE set filtered
+	AEsetnorm_filter = readRDS(paste("array_express_raw/", selected_ids_bat_studies, "/", selected_ids_bat_studies, "_expression_filter_1.Rds", sep=""))
+
+
+	##prepare gene expression data
+	#get a data.frame with rows representing genes and columns representing arrays. To know which columns go with that tissue or experimental treatment, we can rely on the phenoData information inherited from AEset_human.
+	expression_matrix = data.frame(exprs(AEsetnorm_filter))
+		#access the expression and error measurements of assay data stored in an object derived from the ‘eSet-class’.
+		#head(expression_matrix)
+
+	#we have a value of expression per sample, so we have to find a way to summarize and get a value across all samples per gene. We have filtered the sample to be considered in a previous script, so we can just use the median to summarize the gene expression across all the remaining samples. These should be only BAT-related samples of humans thanks to the filtering. In the same experiments we can have BAT sample of males and females of different ages, or brown adipocytes generated in different ways. But thanks to the filtering, we know that the remaining samples belong to experimental groups that show BAT-like features.
+	#We will use median like in the rest of the paper in order to summarize.
+	
+	#calculate the median expression across all samples per prob
+	median_expression = as.data.frame(apply(X=expression_matrix, MARGIN=1, FUN=median))
+	#set the column name as average expression
+	colnames(median_expression) = "average_gene_expression"
+	str(median_expression)
+	#check
+	print("###############################################")
+	print(paste("MERGIN", selected_ids_bat_studies, " OK?: ", sep="")); print(identical(row.names(median_expression), row.names(expression_matrix)))
+	print("###############################################")
+
+	#merge the result with the original data.frame using the row names 
+	expression_matrix = merge(expression_matrix, median_expression, by="row.names")
+
+	#select only the row names and the average gene expression
+	expression_matrix_average = expression_matrix[,c("Row.names", "average_gene_expression")]
+	#str(expression_matrix_average)
+
 
 	##gene annotation
 	
-	#https://www.bioconductor.org/packages/release/workflows/vignettes/maEndToEnd/inst/doc/MA-Workflow.html#11_Annotation_of_the_transcript_clusters	
+	#We used the function select from AnnotationDbi to query the gene symbols and associated short descriptions for the transcript clusters. For each cluster, we added the gene symbol (SYMBOL) and a short description of the gene the cluster represents (GENENAME).
+		#https://www.bioconductor.org/packages/release/workflows/vignettes/maEndToEnd/inst/doc/MA-Workflow.html#11_Annotation_of_the_transcript_clusters	
+
+	#select the AnnotationDb object
+	#we have to convert the probs ID to the gene symbols used by Yuval. In all cases, we select the annotation package that it is not probset. I understand that we do not need probset summarization, which leads to exons, but gene summarization
+		#https://www.bioconductor.org/packages/release/workflows/vignettes/maEndToEnd/inst/doc/MA-Workflow.html#74_Old_and_new_%E2%80%9Cprobesets%E2%80%9D_of_Affymetrix_microarrays
+	if(AEsetnorm_filter@annotation == "pd.hugene.1.0.st.v1"){
+
+		#we select the hugene 10 annotation package
+		require(hugene10sttranscriptcluster.db)
+		selected_annotation = hugene10sttranscriptcluster.db
+			#http://bioconductor.org/packages/release/BiocViews.html#___AnnotationData
+			#http://bioconductor.org/packages/release/data/annotation/manuals/hugene10sttranscriptcluster.db/man/hugene10sttranscriptcluster.db.pdf
+	}
+	if(AEsetnorm_filter@annotation == "pd.hg.u133.plus.2"){
+		
+		#we select the hg 133 annotation package
+		require(hgu133plus2.db)
+		selected_annotation = hgu133plus2.db
+			#http://bioconductor.org/packages/release/BiocViews.html#___AnnotationData
+			#http://bioconductor.org/packages/release/data/annotation/manuals/hgu133plus2.db/man/hgu133plus2.db.pdf
+	}
+
+	#using the selected annotation package, extract the gene symbols for the probs we have (rows in the expression data)
+	gene_symbols_probs = mapIds(x=selected_annotation, keys=expression_matrix_average$Row.names, column=c("SYMBOL"), keytype="PROBEID", multiVals="first")
+		#multivals:
+			#first: This value means that when there are multiple matches only the 1st thing that comes back will be returned. This is the default behavior. 
+
+
+		#https://support.bioconductor.org/p/69378/#69379
+		#https://support.bioconductor.org/p/70769/
+
+
+	#anno_palmieri <- AnnotationDbi::select(hugene10sttranscriptcluster.db, keys = (featureNames(AEsetnorm_filter)), columns = c("SYMBOL", "GENENAME"), keytype = "PROBEID")
+	
+
+	#anno_palmieri <- subset(anno_palmieri, !is.na(SYMBOL))
+
 
 	#Traditionally, Affymetrix arrays (the so-called 3’ IVT arrays) were probeset based: a certain fixed group of probes were part of a probeset which represented a certain gene or transcript (note however, that a gene can be represented by multiple probesets). The more recent “Gene” and “Exon” Affymetrix arrays are exon based and hence there are two levels of summarization to get to the gene level. The “probeset” summarization leads to the exon level. The gene / transcript level is given by “transcript clusters”. Hence, the appropriate annotation package for our chip type is called hugene10sttranscriptcluster.db.
 	#On the left side, we see plenty of probes for each Exon / probeset (i.e. each colour): therefore, a summarization on the probeset / exon level makes sense. In the gene type array, however, only a small proportion of the original probes per probeset is included. Thus, a summarization on the probeset / exon level is not recommended for “Gene” arrays but nonetheless possible by using the hugene10stprobeset.db annotation package. Note that furthermore, there are also no longer designated match/mismatch probes present on “Gene” and “Exon” type chips. The mismatch probe was initially intended as base-level for background correction, but hasn’t prevailed due to more elaborate background correction techniques that do not require a mismatch probe.
@@ -10,39 +155,11 @@
 	#HAY QUE REVISAR QUE EL MISMO TRANSCRITO NO ESTÁ ASOCIADO A DIFERENTES GENES, ESOS CASOS HAY QUE QUITARLOS
 		#https://www.bioconductor.org/packages/release/workflows/vignettes/maEndToEnd/inst/doc/MA-Workflow.html#111_Removing_multiple_mappings
 
-#get a data.frame with rows representing genes and columns representing arrays. To know which columns go with that tissue or experimental treatment, we can rely on the phenoData information inherited from AEset_human.
-expression_matrix = data.frame(exprs(AEsetnorm_filter))
-	#access the expression and error measurements of assay data stored in an object derived from the ‘eSet-class’.
-#head(expression_matrix)
 
 
-#we have a value of expression per subject, so we have to find a way to summarize and get a value across all subject per gene. We would use median like in the rest of the paper
-	#it makes sense to average expression across sex? but what about case/controls? or cold vs non cold?
 
 
-expression_matrix = merge(expression_matrix, apply(X=expression_matrix, MARGIN=1, FUN=median), by="row.names")
-row.names(expression_matrix) = expression_matrix$Row.names
-colnames(expression_matrix)[which(colnames(expression_matrix)=="y")] = "average_gene"
-str(expression_matrix)
 
-expression_matrix_average = expression_matrix[,c("Row.names", "average_gene")]
-colnames(expression_matrix_average) = c("row_names", "average_gene_expression")
-str(expression_matrix_average)
-
-#we have to convert the probs ID of affy_hugene_1_0_st_v1 to the gene symbols used by Yuval
-	#https://www.biostars.org/p/69597/
-	#https://support.bioconductor.org/p/42839/
-#require(hgu133plus2.db)
-require(hugene10sttranscriptcluster.db) #I guess hu gene 10 is hugene_1_0... I ahve seen the same for hugene20 as hugene_2_0
-tail(keys(hugene10sttranscriptcluster.db, keytype="SYMBOL"))
-k <- keys(hugene10sttranscriptcluster.db, keytype="PROBEID")
-#select(hugene10sttranscriptcluster.db, keys=k, columns=c("SYMBOL","GENENAME"), keytype="PROBEID")
-
-gene_symbols_probs = mapIds(hugene10sttranscriptcluster.db, keys=k, column=c("SYMBOL"), keytype="PROBEID", multiVals="first")
-	#mapIds deals with duplicates...
-		#https://support.bioconductor.org/p/69378/#69379
-
-		#https://support.bioconductor.org/p/70769/
 
 
 gene_symbols_probs = gene_symbols_probs[which(!is.na(gene_symbols_probs))] #CHECK HOW MANY ARE LOST
@@ -88,7 +205,7 @@ merged_data_aggregated_ordered = merged_data_aggregated[order(merged_data_aggreg
 
 merged_data_aggregated_high_expression = merged_data_aggregated[which(merged_data_aggregated$average_gene_expression > quantile(merged_data_aggregated$average_gene_expression, probs=0.75)),]
 
-
+#I think it is better to select those genes more expressed than compare with controls. In some studies the control is WAT of the same subject, but in others studies the control are not differentiated cells... so I do not think it is a good idea to combine differential expression between studies. This is the cleanest way to combine multiple studies.
 
 
 
@@ -221,3 +338,5 @@ pval
 		#for the rest iterations, create a random set of gene names with the same size than BAT candidates we have. In each case, calculate how many are in the top across studies, and then save the number.
 	#calculate a p-value comparing the number of BAT candidates in the expression top with that of random genes.
 #this can done for 2000 to 10 tops and calculate and enrichment curve
+
+}

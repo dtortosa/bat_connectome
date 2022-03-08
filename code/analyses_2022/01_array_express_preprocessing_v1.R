@@ -8,11 +8,11 @@
 
 
 
-#####################################################################################
-########################## OBTAINING BAT GENE EXPRESSSION ###########################
-#####################################################################################
+####################################################################################
+########################## PREPROCESING GENE EXPRESSSION ###########################
+####################################################################################
 
-#Script for calculating cleaned dataset with gene expression values in BAT
+#Script for preprocesing gene expression data from ArrayExpress
 
 #Part of the code of this script comes from
 	#a tutorial of ArrayExpress
@@ -29,6 +29,8 @@
 
 require(ArrayExpress) #for loading data from ArrayExpress
 require(arrayQualityMetrics) #for normalizing expression data in each dataset
+require(foreach) #for parallel
+require(doParallel) #for parallel
 
 
 
@@ -44,6 +46,9 @@ require(arrayQualityMetrics) #for normalizing expression data in each dataset
 #set working directory to results, because ArrayExpress save stuff during the analyses automatically
 wd="/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/human_genome_connectome/bat_connectome/results/results_2022"
 setwd(wd)
+
+#completely remove the previous folder with raw data
+system(paste("rm -rf array_express_raw", sep=""))
 
 #create a directory to save the results and move to it
 system(paste("mkdir -p array_express_raw", sep=""))
@@ -85,28 +90,39 @@ bat_datasets_info[[1]] = list(
 	paper="Reprogrammed Functional Brown Adipocytes Ameliorate Insulin Resistance and Dyslipidemia in Diet-Induced Obesity and Type 2 Diabetes (doi:10.1016/j.stemcr.2015.08.007)",
 	url="https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-56635/?keywords=brown+adipose+tissue&organism=Homo+sapiens&exptype%5B%5D=&exptype%5B%5D=&array=",
 	details_bat="The original publication says that the accession number for the microarray data reported is GSE52817, but that number connect to data for the transformation of fibroblasts to osteoblasts. In contrast, the paper explains that created two types of brown adipocytes: i) iBA (induced brown adipocytes), coming from human induced pluripotent stem cells (iPSCs). After 12 days, 75% of the cells showed BA-like appearance (multilocular lipid droplets and abound mitochondria. They also showed high expression BAT markers (UCP1, CIDEA and DIO2); dBA: Direct conversion from human fibroblasts. They used retroviruses to include reprogramming factor genes. CM-transduced genes were considered dBAs, being more than 90% of them UCP1 positive. They expressed mRNA of UCP1, CIDE and ADIPOQ at high levels compared to fibroblasts. Therefore, we can obtain gene expression data from cells showing BAT-like phenotypes: iBAs and dBAs. There are also mouse cells, but our script will select only human cells (see below).", 
-	detail_date="The dataset was updated 19 August 2015 for the last time in ArrayExpress, and the corresponding paper was published in 13 October 2015. Therefore, this is likely the last version of the dataset.")
+	details_date="The dataset was updated 19 August 2015 for the last time in ArrayExpress, and the corresponding paper was published in 13 October 2015. Therefore, this is likely the last version of the dataset.")
 
 #E-GEOD-19643
 bat_datasets_info[[2]] = list(
 	dataset="E-GEOD-19643",
 	paper="PGC-1 alpha mediates differentiation of mesenchymal stem cells to brown adipose cells (doi:10.5551/jat.7401)",
 	url="https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-19643/?query=brown+adipose+tissue&organism=Homo+sapiens&exptype%5B%5D=%22rna+assay%22",
-	details_bat="CHECK, it seems they created BAT-like cells from pluripotent cells using PGC-1 alpha, and there is an increase of UCP1 in these transformed cells.")
+	details_bat="They took mesenchymal stem cells from the bone marrow of a female donor (BMSCs). They induced adipocyte differentiation by treating BMSCs with a differentiation medium. They also performed osteogenic differentiation on the BMSCs. Before adipocyte differentiation, they transformed BMSCs with adenovirus containing green fluorescent protein (GFP) and human PGC-1 alpha cDNA or the antisense sequence of PGC-1 alpha, respectively. The adenovirus containing GFP (Ad-GFP) and adenovirus containing the antisense sequence of PGC-1 alpha (Ad-AS-PGC-1 alpha) were used as controls. Then, they used antibodies to detect several proteins: PGC-1 alpha, UCP1, UCP2, necdin, nuclear respiratory factor (NRF-1) and actin. They also measured mitochondrial mass, oxygen consumption and reactive oxygen species. Those BMSC cells infected with PGC-1 alpha viruses showed upregulation of expression of PGC-1 alpha mRNA. There is also an increase and mitochondrial mass and UCP1, along with a decrease in genes related to WAT. Therefore, these are BAT-like features. Note that this refers to bone marrow-derived MSCs infected with Ad-PGC-1α at a multiplicity of infection (m.o.i.) of 500 overnight. I understand this is the data we have (not 100 overnight which is also showed in the paper), because the information about this accession in NCBI indicates 500 overnight.",
+	details_date="The dataset was updated 10 June 2011 for the last time in ArrayExpress, and the corresponding paper was published in 5 August 2011. Therefore, this is likely the last version of the dataset.")
 
 #E-GEOD-27657
-bat_datasets_info[[3]] = list(dataset="E-GEOD-27657")
+bat_datasets_info[[3]] = list(dataset="E-GEOD-27657",
+	paper="Gene expression in human brown adipose tissue (doi:10.3892/ijmm.2010.566)",
+	url="https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-27657/",
+	details_bat="Biopses of adipose tissue of brown-red color were obtained from an area close to the isthmus region of the thyroid gland. In each patient, biopses were also taken from the subcutaneous depot in the surgical incision area and were considered as WAT. They used staining and also antibodies against UCP1 or CKMT1. Gene expression was evaluated using the Human Genome U133Plus2.0 DNA microarray (Affymetrics). UCP1 was undetectable in all WAT samples, but it was detectable in half of the brown-red biopsies. Biopsies were classified as BAT if UCP1 expression was >0.5 relative to the reference gene RPLP0. They analyzed genes deferentially expressed in BAT and WAT. They found that UCP1 gene was overexpressed in sample classified as BAT. Other 16 genes were also expressed at higher levels in BAT compared to WAT. According to Gene Ontology (GO) analysis, five of these genes encode proteins that have their main function in mitochondria. In the abstract, they say 'Microarray analysis of 9 paired human BAT and WAT samples showed that 17 genes had at least a 4-fold higher expression in BAT compared to WAT and five of them'. Therefore, I understand that these are the 18 samples I have in the expression file, and those belonging to perthyroid are those biopsies showing BAT features.",
+	details_date="The dataset was updated 2 June 2014 for the last time in ArrayExpress, and the two related papers were published in 1 December 2010 and 1 February 2013. Therefore, this is likely the last version of the dataset.")
 
 #E-GEOD-54280
-bat_datasets_info[[4]] = list(dataset="E-GEOD-54280")
+bat_datasets_info[[4]] = list(dataset="E-GEOD-54280", 
+	paper="Comparative gene array analysis of progenitor cells from human paired deep neck and subcutaneous adipose tissue (doi: 10.1016/j.mce.2014.07.011)",
+	url="https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-54280/",
+	details_bat="They took deep neck adipose tissue from the region surrounding the carotid sheath. From the same patient, subcutaneous neck adipose tissue was obtained from the neck at the surgical incision. BAT was defined by the presence of multivacuolar adipocytes staining positive for UCP1. Progenitor cells were isolated by collagenase digestion and subsequently transferred to cell culture. After reaching subconfluency (7 days), they harvested RNA and analyzed differences in gene expression by microarray analysis. The total RNAs were amplified and labeled following the Whole Transcript (WT) Sense Target Labeling Assay (http://www.affymetrix.com). Labeled ssDNA was hybridized to Human Gene 1.0 ST Affymetrix GeneChip arrays (Affymetrix). The regions of deep neck adipose tissue that contained multivacuolar adipocytes stained positively for UCP1, but no staining was observed in univacuolar adipocytes in deep neck and subcutaneous neck tissue. They found an enrichment of UCP1 and PRDM16 mRNA expression in deep neck tissue samples compared with subcutaneous, but high variance. The same was found for LHX8, a BAT marker. However, they found a higher significant expression of UCP1 and PRDM16 in adipocytes derived from deep neck cells after differentiation (they were exposed to a differentiation medium) compared with adipocytes derved from subcutaneous cells. Same for RDM16 and LHX8. Leptin, which is a WAT marker, was more expressed in adipocytes derived from subcutaneous cells compared to adipocytes derived from the neck. Although there were not great functional differences respect oxygen consumption and proton leak. Finally, they compared gene expression in microarray between progenitor cells of deep and subcutaneous neck in six patients. These are our patients, I understand that they took only 6 of the 12 individuals and then took 2 samples for each one (deep vs. subcutaneous neck), giving our 12 samples. Genes previously associated with BAT or browning, like BMP4, EBF2, FABP3 and PDGFR alpha were higher expressed in progenitor cells from the deep neck adipose depot compared with cells from the subcutaneous neck tissue. In the same line, genes which have been described as marker gene for white adipose tissue as well as genes implicated in the determination of white adipocytes including VDR, HOXC8, SHOX2, TWIST1 and PAX3 were higher expressed in subcutaneous neck compared with deep neck progenitor cells. Therefore, deep neck samples seems to be closer to BAT compared to subcutaneous neck samples.",
+	details_date="The dataset was updated 8 August 2014 for the last time in ArrayExpress, and the corresponding paper was published in September 2014. Therefore, this is likely the last version of the dataset.")
 
 #create a vector with the IDs
-ids_bat_studies = c("E-GEOD-56635", "E-GEOD-19643", "E-GEOD-27657", "E-GEOD-54280")
-	#E-MTAB-25 fail, Error in `.rowNamesDF<-`(x, value = value) :  duplicate 'row.names' are not allowed
-		#maybe: https://www.biostars.org/p/62988/
+ids_bat_studies = as.vector(unlist(sapply(X=bat_datasets_info, "[", "dataset")))
+
+#save the list with information
+saveRDS(object=bat_datasets_info, file="info_datasets.Rds")
 
 #IMPORTANT: Files of some studies cannot be loaded, the error is duplicated row.names. Maybe you can dowload separately each part (getAE) and create the ExpressionSet file by yourself
-
+	#E-MTAB-25 fail, Error in `.rowNamesDF<-`(x, value = value) :  duplicate 'row.names' are not allowed
+		#maybe: https://www.biostars.org/p/62988/
 
 
 
@@ -131,8 +147,7 @@ extract_expression_data = function(selected_ids_bat_studies){
 
 	#see one specific dataset
 	print("###############################################")
-	print(paste("INFO", selected_ids_bat_studies, ": ", sep=""))
-	print(sets_raw[which(sets_raw$ID == selected_ids_bat_studies), 1:7])
+	print(paste("INFO", selected_ids_bat_studies, ": ", sep="")); print(sets_raw[which(sets_raw$ID == selected_ids_bat_studies), 1:7])
 	print("###############################################")
 
 	#Use ArrayExpress for loading the selected dataset
@@ -292,7 +307,7 @@ extract_expression_data = function(selected_ids_bat_studies){
 	#do the operations according to the dataset
 	if(selected_ids_bat_studies == "E-GEOD-56635"){
 
-		#select arrays that do not come from 
+		#select arrays that do not come from white adypocytes 
 		bat_arrays_index = which(!grepl("White Adipocytes", AEsetnorm$Characteristics..cell.type., fixed=TRUE))
 			#You can use pData to access to the phenotypic data (e.g., covariates) and meta-data (e.g., descriptions of covariates) associated with an experiment.
 			#The quality metrics are better after removing WAT arrays.
@@ -311,8 +326,9 @@ extract_expression_data = function(selected_ids_bat_studies){
 	}
 	if(selected_ids_bat_studies == "E-GEOD-19643"){
 
-		#select arrays that do not come from 
-		bat_arrays_index = which(!grepl("PGC-1 alpha", AEsetnorm$Comment..Sample_source_name., fixed=TRUE))
+		#select arrays for PGC-1 alpha-transformed cells
+		bat_arrays_index = which(grepl("PGC-1 alpha", AEsetnorm$Comment..Sample_source_name., fixed=TRUE))
+			#PGC-1 alpha transformed mesenchymal cells are those showing BAT-like features.
 			#You can use pData to access to the phenotypic data (e.g., covariates) and meta-data (e.g., descriptions of covariates) associated with an experiment.
 			#The quality metrics are better after removing WAT arrays.
 
@@ -323,8 +339,35 @@ extract_expression_data = function(selected_ids_bat_studies){
 		selected_arrays = selected_arrays[bat_arrays_index]
 	}
 	if(selected_ids_bat_studies == "E-GEOD-27657"){
+
+		#select arrays for BAT
+		bat_arrays_index = which(grepl("perithyroid", AEsetnorm$Characteristics..organism.part., fixed=TRUE))
+			#This includes female and male subjects
+			#You can use pData to access to the phenotypic data (e.g., covariates) and meta-data (e.g., descriptions of covariates) associated with an experiment.
+			#The quality metrics are better after removing WAT arrays.
+
+		#save the column used to filter
+		column_filter_names = "Characteristics..organism.part."
+
+		#save the names of the selected arrays
+		selected_arrays = selected_arrays[bat_arrays_index]
+
+		#remove an individual with perithyroid data which seems to be an outlier
+		#selected_arrays = selected_arrays[-3] #CHECK THIS
 	}
 	if(selected_ids_bat_studies == "E-GEOD-54280"){
+
+		#select arrays for BAT
+		bat_arrays_index = which(grepl("deep neck", AEsetnorm$Comment..Sample_source_name., fixed=TRUE))
+			#This includes male and female subjects
+			#You can use pData to access to the phenotypic data (e.g., covariates) and meta-data (e.g., descriptions of covariates) associated with an experiment.
+			#The quality metrics are better after removing WAT arrays.
+
+		#save the column used to filter
+		column_filter_names = "Comment..Sample_source_name."
+
+		#save the names of the selected arrays
+		selected_arrays = selected_arrays[bat_arrays_index]
 	}
 
 	#select only the arrays we are interested
@@ -332,8 +375,7 @@ extract_expression_data = function(selected_ids_bat_studies){
 
 	#check
 	print("###############################################")
-	print(paste(selected_ids_bat_studies, ": WE SELECTED THE INTEREST ARRAY?", sep=""))
-	print(identical(colnames(exprs(AEsetnorm_filter)), selected_arrays))
+	print(paste(selected_ids_bat_studies, ": WE SELECTED THE INTEREST ARRAY?", sep="")); print(identical(colnames(exprs(AEsetnorm_filter)), selected_arrays))
 	print("###############################################")
 
 
@@ -359,4 +401,44 @@ extract_expression_data = function(selected_ids_bat_studies){
 	saveRDS(AEsetnorm_filter, paste(selected_ids_bat_studies, "/", selected_ids_bat_studies, "_expression_filter_1.Rds", sep=""))
 	saveRDS(AEsetnorm, paste(selected_ids_bat_studies, "/", selected_ids_bat_studies, "_expression_non_filter.Rds", sep=""))
 		#https://support.bioconductor.org/p/125920/
+
+	#return the name of the dataset processed
+	return(selected_ids_bat_studies)
 }
+
+
+
+#####################################
+###### PARALLELIZE THE PROCESS ######
+#####################################
+
+#there is an error for one of the datasets and it is only produced when using this. We can use apply functions. It is ok, because this is not too much computational time.
+if(FALSE){
+
+#BAT studies
+ids_bat_studies
+
+#set up cluster
+clust <- makeCluster(length(ids_bat_studies), outfile="") #outfile let you to see the output in the terminal "https://blog.revolutionanalytics.com/2015/02/monitoring-progress-of-a-foreach-parallel-job.html"
+registerDoParallel(clust)
+
+#run the function for all populations
+foreach(i=ids_bat_studies, .packages=c("ArrayExpress", "arrayQualityMetrics")) %dopar% {
+    extract_expression_data(selected_ids_bat_studies=i)
+}
+
+#stop the cluster 
+stopCluster(clust)
+}
+
+
+
+################################
+###### APPLY THE FUNCTION ######
+################################
+ids_bat_studies_processed = sapply(X=ids_bat_studies, FUN=extract_expression_data)
+
+#check
+print("###############################################")
+print(paste("WE PROCESSED ALL SELECTED DATASETS?", sep="")); print(summary(ids_bat_studies == ids_bat_studies_processed))
+print("###############################################")
