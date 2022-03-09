@@ -29,8 +29,8 @@
 
 require(ArrayExpress) #for loading data from ArrayExpress
 require(arrayQualityMetrics) #for normalizing expression data in each dataset
-require(foreach) #for parallel
-require(doParallel) #for parallel
+require(dplyr) #for doing some data operations
+require(plyr) #for llply
 
 
 
@@ -57,43 +57,44 @@ ids_bat_studies = as.vector(unlist(sapply(X=bat_datasets_info, "[", "dataset")))
 
 
 
-########################################################################
-####################### CALCULATE GEN EXPRESSION #######################
-########################################################################
+#############################################################################
+####################### CALCULATE EXPRESSION PER GENE #######################
+#############################################################################
 
 
 ##write a function to do that
 #selected_ids_bat_studies=ids_bat_studies[1] #for debugging
 extract_expression_data = function(selected_ids_bat_studies){
 
+	##starting
 	#make a directory for the selected dataset
 	system(paste("mkdir -p array_express_gene_expression/", selected_ids_bat_studies, sep=""))
 		#use mkdir -p because if you don't and run again, you will get an error that it exists. "p" flags is for "no error if existing, make parent directories as needed"
 
 	#see one specific dataset
 	print("###############################################")
-	print(paste("STARTING", selected_ids_bat_studies, ": ", sep=""))
+	print(paste("STARTING ", selected_ids_bat_studies, ": ", sep=""))
 	print("###############################################")
-
 
 	#load the AE set filtered
 	AEsetnorm_filter = readRDS(paste("array_express_raw/", selected_ids_bat_studies, "/", selected_ids_bat_studies, "_expression_filter_1.Rds", sep=""))
 
 
 	##prepare gene expression data
-	#get a data.frame with rows representing genes and columns representing arrays. To know which columns go with that tissue or experimental treatment, we can rely on the phenoData information inherited from AEset_human.
+	#get a data.frame with rows representing probes and columns representing arrays. To know which columns go with that tissue or experimental treatment, we can rely on the phenoData information inherited from AEset_human.
 	expression_matrix = data.frame(exprs(AEsetnorm_filter))
+	#head(expression_matrix)
 		#access the expression and error measurements of assay data stored in an object derived from the ‘eSet-class’.
-		#head(expression_matrix)
+	#head(pData(AEsetnorm_filter))
 
-	#we have a value of expression per sample, so we have to find a way to summarize and get a value across all samples per gene. We have filtered the sample to be considered in a previous script, so we can just use the median to summarize the gene expression across all the remaining samples. These should be only BAT-related samples of humans thanks to the filtering. In the same experiments we can have BAT sample of males and females of different ages, or brown adipocytes generated in different ways. But thanks to the filtering, we know that the remaining samples belong to experimental groups that show BAT-like features.
+	#we have a value of expression per sample, so we have to find a way to summarize and get a value across all samples per probe We have filtered the samples to be considered in a previous script, so we can just use the median to summarize the expression across all the remaining samples. These should be only BAT-related samples of humans thanks to the filtering. In the same experiments, we can have BAT sample of males and females of different ages, or brown adipocytes generated in different ways. But thanks to the filtering, we know that the remaining samples belong to experimental groups that show BAT-like features.
 	#We will use median like in the rest of the paper in order to summarize.
 	
 	#calculate the median expression across all samples per prob
 	median_expression = as.data.frame(apply(X=expression_matrix, MARGIN=1, FUN=median))
 	#set the column name as average expression
 	colnames(median_expression) = "average_gene_expression"
-	str(median_expression)
+	#str(median_expression)
 	#check
 	print("###############################################")
 	print(paste("MERGIN", selected_ids_bat_studies, " OK?: ", sep="")); print(identical(row.names(median_expression), row.names(expression_matrix)))
@@ -101,15 +102,22 @@ extract_expression_data = function(selected_ids_bat_studies){
 
 	#merge the result with the original data.frame using the row names 
 	expression_matrix = merge(expression_matrix, median_expression, by="row.names")
+	#str(expression_matrix)
 
 	#select only the row names and the average gene expression
 	expression_matrix_average = expression_matrix[,c("Row.names", "average_gene_expression")]
+	#change the colname of the probeIDS
+	colnames(expression_matrix_average)[which(colnames(expression_matrix_average) == "Row.names")] = "PROBEID"
 	#str(expression_matrix_average)
+	#head(expression_matrix_average)
 
 
 	##gene annotation
-	
-	#We used the function select from AnnotationDbi to query the gene symbols and associated short descriptions for the transcript clusters. For each cluster, we added the gene symbol (SYMBOL) and a short description of the gene the cluster represents (GENENAME).
+	#Traditionally, Affymetrix arrays (the so-called 3’ IVT arrays) were probeset based: a certain fixed group of probes were part of a probeset which represented a certain gene or transcript (note however, that a gene can be represented by multiple probesets). The more recent “Gene” and “Exon” Affymetrix arrays are exon based and hence there are two levels of summarization to get to the gene level. The “probeset” summarization leads to the exon level. The gene / transcript level is given by “transcript clusters”. Hence, the appropriate annotation package for our chip type should be something like hugene10sttranscriptcluster.db.
+		#In general, I have avoided annotation packages that have the name probset, like hugene10stprobeset.db.
+		#https://www.bioconductor.org/packages/release/workflows/vignettes/maEndToEnd/inst/doc/MA-Workflow.html#74_Old_and_new_%E2%80%9Cprobesets%E2%80%9D_of_Affymetrix_microarrays
+
+	#We use the function mapIds from AnnotationDbi to query the gene symbols for the transcript clusters. For each cluster, we added the gene symbol (SYMBOL)
 		#https://www.bioconductor.org/packages/release/workflows/vignettes/maEndToEnd/inst/doc/MA-Workflow.html#11_Annotation_of_the_transcript_clusters	
 
 	#select the AnnotationDb object
@@ -120,129 +128,201 @@ extract_expression_data = function(selected_ids_bat_studies){
 		#we select the hugene 10 annotation package
 		require(hugene10sttranscriptcluster.db)
 		selected_annotation = hugene10sttranscriptcluster.db
-			#http://bioconductor.org/packages/release/BiocViews.html#___AnnotationData
-			#http://bioconductor.org/packages/release/data/annotation/manuals/hugene10sttranscriptcluster.db/man/hugene10sttranscriptcluster.db.pdf
+			#we have avoided hugene10stprobeset.db
+				#http://bioconductor.org/packages/release/BiocViews.html#___AnnotationData
+					#search for "hugene"
+				#http://bioconductor.org/packages/release/data/annotation/manuals/hugene10sttranscriptcluster.db/man/hugene10sttranscriptcluster.db.pdf
 	}
 	if(AEsetnorm_filter@annotation == "pd.hg.u133.plus.2"){
 		
 		#we select the hg 133 annotation package
 		require(hgu133plus2.db)
 		selected_annotation = hgu133plus2.db
-			#http://bioconductor.org/packages/release/BiocViews.html#___AnnotationData
-			#http://bioconductor.org/packages/release/data/annotation/manuals/hgu133plus2.db/man/hgu133plus2.db.pdf
+			#we have avoided hgu133plus2probe (see above)
+				#http://bioconductor.org/packages/release/BiocViews.html#___AnnotationData
+					#search for "133"
+				#http://bioconductor.org/packages/release/data/annotation/manuals/hgu133plus2.db/man/hgu133plus2.db.pdf
 	}
 
 	#using the selected annotation package, extract the gene symbols for the probs we have (rows in the expression data)
-	gene_symbols_probs = mapIds(x=selected_annotation, keys=expression_matrix_average$Row.names, column=c("SYMBOL"), keytype="PROBEID", multiVals="first")
-		#multivals:
-			#first: This value means that when there are multiple matches only the 1st thing that comes back will be returned. This is the default behavior. 
+	gene_symbols_probs = AnnotationDbi::select(x=selected_annotation, keys=expression_matrix_average$PROBEID, column=c("SYMBOL"), keytype="PROBEID")
+		#x: AnnotationDb object
+		#keys: The keys to select records from the database.
+			#we are using the probes IDs of the selected dataset
+		#columns: the columns or kinds of things that can be retrieved from the database.
+		#keytype: the keytype that matches the keys used. 
+			#We are using the probe ids.
 
-
-		#https://support.bioconductor.org/p/69378/#69379
-		#https://support.bioconductor.org/p/70769/
-
-
-	#anno_palmieri <- AnnotationDbi::select(hugene10sttranscriptcluster.db, keys = (featureNames(AEsetnorm_filter)), columns = c("SYMBOL", "GENENAME"), keytype = "PROBEID")
 	
+	##remove NA
+	#probes with and without SYMBOL
+	probs_without_symbol = which(is.na(gene_symbols_probs$SYMBOL))
+	probs_with_symbol = which(!is.na(gene_symbols_probs$SYMBOL))
+	
+	#see
+	print("###############################################")
+	print(paste("FROM ", nrow(gene_symbols_probs), " PROBS, ", length(probs_without_symbol), " HAVE NO GENE SYMBOL", sep=""))
+	print("###############################################")
 
-	#anno_palmieri <- subset(anno_palmieri, !is.na(SYMBOL))
+	#select those probes with gene symbol
+	gene_symbols_probs = gene_symbols_probs[probs_with_symbol,]
+
+	#check
+	print("###############################################")
+	print(paste("ALL PROBS WITHOUT GENE SYMBOL WERE REMOVED?:", sep="")); print(length(which(is.na(gene_symbols_probs))) == 0)
+	print("###############################################")
 
 
-	#Traditionally, Affymetrix arrays (the so-called 3’ IVT arrays) were probeset based: a certain fixed group of probes were part of a probeset which represented a certain gene or transcript (note however, that a gene can be represented by multiple probesets). The more recent “Gene” and “Exon” Affymetrix arrays are exon based and hence there are two levels of summarization to get to the gene level. The “probeset” summarization leads to the exon level. The gene / transcript level is given by “transcript clusters”. Hence, the appropriate annotation package for our chip type is called hugene10sttranscriptcluster.db.
-	#On the left side, we see plenty of probes for each Exon / probeset (i.e. each colour): therefore, a summarization on the probeset / exon level makes sense. In the gene type array, however, only a small proportion of the original probes per probeset is included. Thus, a summarization on the probeset / exon level is not recommended for “Gene” arrays but nonetheless possible by using the hugene10stprobeset.db annotation package. Note that furthermore, there are also no longer designated match/mismatch probes present on “Gene” and “Exon” type chips. The mismatch probe was initially intended as base-level for background correction, but hasn’t prevailed due to more elaborate background correction techniques that do not require a mismatch probe.
-		#https://www.bioconductor.org/packages/release/workflows/vignettes/maEndToEnd/inst/doc/MA-Workflow.html#74_Old_and_new_%E2%80%9Cprobesets%E2%80%9D_of_Affymetrix_microarrays
-
-	#HAY QUE REVISAR QUE EL MISMO TRANSCRITO NO ESTÁ ASOCIADO A DIFERENTES GENES, ESOS CASOS HAY QUE QUITARLOS
+	##remove probs associated with several genes
 		#https://www.bioconductor.org/packages/release/workflows/vignettes/maEndToEnd/inst/doc/MA-Workflow.html#111_Removing_multiple_mappings
+	#first put together rows with the same PROBEID as a group
+	probes_grouped <- group_by(gene_symbols_probs, PROBEID)
+		#Most data operations are done on groups defined by variables. group_by() takes an existing tbl and converts it into a grouped tbl where operations are performed "by group". ungroup() removes grouping.
+
+	#then summarize by counting the number of distinct symbols per probe ID
+	probes_summarized <- dplyr::summarize(.data=probes_grouped, no_of_matches=n_distinct(SYMBOL))
+		#‘summarise()’ creates a new data frame. It will have one (or more) rows for each combination of grouping variables
+		#n_distinct:  This is a faster and more concise equivalent of ‘length(unique(x))
+		#For each group (i.e., each probe), calculate the number of unique gene symbols associated. This is the number of genes that each probe is associated with. Save the result in no_of_matches.
+	#head(probes_summarized)
+
+	#select those probes associated with more than 1 gene symbol
+	probe_stats <- filter(probes_summarized, no_of_matches > 1)
+		#The ‘filter()’ function is used to subset a data frame, retaining all rows that satisfy your conditions. 
+
+	#see
+	print("###############################################")
+	print(paste("HOW MANY PROBES ARE ASSOCIATED WITH SEVERAL GENE SYMBOLS?: ", sep="")); print(nrow(probe_stats))
+	print("###############################################")
+
+	#remove these probes
+	gene_symbols_probs = gene_symbols_probs[which(!gene_symbols_probs$PROBEID %in% probe_stats$PROBEID),]
+		#We have probes that map to multiple gene symbols. It is difficult to decide which mapping is “correct”. Therefore, we exclude these probes.
+
+	#check
+	print("###############################################")
+	print(paste("WE HAVE REMOVED ALL PROBES ASSOCIATED WITH MULTIPLE GENES: ", sep="")); print(unique(dplyr::summarize(.data=group_by(gene_symbols_probs, PROBEID), no_of_matches=n_distinct(SYMBOL))$no_of_matches) == 1) #see previous lines for an explanation of these steps
+	print("###############################################")
 
 
+	##merge annotation and expression data
+	#merge by PROBEID
+	merged_data = merge(expression_matrix_average, gene_symbols_probs, by="PROBEID") #CHECK THIS
+	#str(merged_data)
+	#head(merged_data)
+	
+	#see
+	print("###############################################")
+	print(paste("SEE SUMMARY: ", sep="")); print(summary(merged_data)) #see previous lines for an explanation of these steps
+	print("###############################################")
 
+	
+	##summarize expression by gene
+	#The same gene can be detected by several probes, because the same gene can produce different transcripts. We consider the median of all transcript per gene
 
-
-
-
-
-gene_symbols_probs = gene_symbols_probs[which(!is.na(gene_symbols_probs))] #CHECK HOW MANY ARE LOST
-gene_symbols_probs = as.data.frame(gene_symbols_probs)
-gene_symbols_probs$PROBEID = row.names(gene_symbols_probs)
-str(gene_symbols_probs)
-
-
-require(dplyr)
-anno_grouped <- group_by(gene_symbols_probs, PROBEID)
-anno_summarized <- dplyr::summarize(anno_grouped, no_of_matches = n_distinct(gene_symbols_probs))
-head(anno_summarized)
-summary(anno_summarized)
-
-
-merged_data = merge(expression_matrix_average, gene_symbols_probs, by="row.names") #CHECK THIS
-str(merged_data)
-head(merged_data)
-summary(merged_data)
-
-
-merged_data[which(duplicated(merged_data$gene_symbol)),]
-
-
-merged_data_aggregated = aggregate(average_gene_expression ~ gene_symbols_probs, merged_data, median)
-	#some recommend to summarize probs by gene using mean or median. We have used median to summarize across the manuscript
-		#https://www.biostars.org/p/271379/#271588
-		#https://www.biostars.org/p/336130/
-
-	#OJO
+	#there is some controversy
 		#If they are different isoforms, doing an average of two might not be appropriate cause one might no be expressed and that brings gene expression down..
 		#Yes, of course, in which case you will have to write some code to check for these situations in which the expression is so low for one probe such that it is negligible.
 			#https://www.biostars.org/p/271379/#271588
-
 		#otros dicen the usar el valor maximo
 			#https://support.bioconductor.org/p/70133/
+		#we are just going to use the usual approach with median, which is less sensitive to outliers.
+
+	#see cases
+	print("###############################################")
+	print(paste("CASES IN WHICH A GENE IS DETECTED BY SEVERAL PROBES: ", sep="")); print(length(which(duplicated(merged_data$SYMBOL))))
+	print("###############################################")
+
+	#calculate the median expression in each gene
+	final_data = aggregate(average_gene_expression ~ SYMBOL, merged_data, median)
+		#some people recommend to summarize probes by gene using mean or median. We have used median to summarize across the whole manuscript, so we will stick to it.
+			#https://www.biostars.org/p/271379/#271588
+			#https://www.biostars.org/p/336130/
+
+	#see duplicated cases
+	print("###############################################")
+	print(paste("CASES IN WHICH A GENE IS DETECTED BY SEVERAL PROBES AFTER SUMMARY: ", sep="")); print(length(which(duplicated(final_data$SYMBOL))))
+	print("###############################################")
+
+	#return
+	return(final_data)
+}
 
 
-merged_data_aggregated[which(duplicated(merged_data_aggregated$gene_symbol)),]
+##apply the function
+#apply across studies and then save as a list preserving the labels
+list_final_datasets = llply(ids_bat_studies, extract_expression_data)
+	#llply is equivalent to lapply except that it will preserve labels and can display a progress bar.
 
-
-merged_data_aggregated_ordered = merged_data_aggregated[order(merged_data_aggregated$average_gene_expression, decreasing=TRUE),]
-
-merged_data_aggregated_high_expression = merged_data_aggregated[which(merged_data_aggregated$average_gene_expression > quantile(merged_data_aggregated$average_gene_expression, probs=0.75)),]
-
-#I think it is better to select those genes more expressed than compare with controls. In some studies the control is WAT of the same subject, but in others studies the control are not differentiated cells... so I do not think it is a good idea to combine differential expression between studies. This is the cleanest way to combine multiple studies.
-
+#see
+str(list_final_datasets)
 
 
 
-	#MIRA
-	#https://www.bioconductor.org/packages/release/workflows/vignettes/maEndToEnd/inst/doc/MA-Workflow.html#12_Linear_models
+#############################################################################
+####################### SELECT HIGHLY EXPRESSED GENES #######################
+#############################################################################
 
+#I think it is better to select those genes more expressed than compare expression between BAT and controls. In some studies the control is WAT of the same subject, but in others studies the controls are not differentiated cells... so I do not think it is a good idea to combine differential expression between studies. This is the cleanest way to combine multiple studies.
 
+#in case you need to do differential expression analyses, look:
+	#ArrayExpress tutorial
+		#https://www.bioconductor.org/packages/release/bioc/vignettes/ArrayExpress/inst/doc/ArrayExpress.pdf
+	#very complete tutorial about array expression analyses
+		#https://www.bioconductor.org/packages/release/workflows/vignettes/maEndToEnd/inst/doc/MA-Workflow.html#12_Linear_models
 	#book chapter differential expression between pops
 		#https://link.springer.com/content/pdf/10.1007%2F0-387-29362-0.pdf
 
+#it seems there are also option to merge array datasets
+	#MergeMaid is an old package, but maybe there are novel options
 
-#ESTAS LINEAS SON DEL ARRAYEXPRESS TUTORIAL
-#Now that we have ensured that the data are well processed, we can search for differentially expressed genes using the package limma. To understand the details of each steps, please see the limma user guide.
-library("limma")
-facs = pData(AEsetnorm_filter)[,column_filter_names]
-f = factor(facs)
-design = model.matrix(~0+f)
-colnames(design) = levels(f)
-fit = lmFit(AEsetnorm_filter, design)
-cont.matrix = makeContrasts(BATvsWAT = BAT-WAT, levels=design)
-fit2 = contrasts.fit(fit, cont.matrix)
-fit2 = eBayes(fit2)
+##create a function
+#for debugging: selected_dataset=list_final_datasets[[1]]; threshold_level=0.95
+high_expression = function(selected_dataset, threshold_level){
 
-#Here we end up with a list of genes that are differentially expressed between BAT and WAR, but one can perform other comparisons with the same data.
-res = topTable(fit2, coef = "BATvsWAT", adjust = "BH")
+	#extract the expression value corresponding with the selected threshold
+	selected_threshold = quantile(selected_dataset$average_gene_expression, probs=threshold_level)
 
-#This could now be followed by an integrative analysis of the data, a complex and open-ended task for which essential tools are provided in the Bioconductor project: the quality of the datasets could be assessed with the help of the arrayQualityMetrics package (Kauffmann et al., 2009), they could be normalized and analysed for differential expression of genes and gene sets (Hahne et al., 2008), and the combination of different datasets is facilitated, for example, by the MergeMaid package (Cope et al., 2004).
+	#select those rows of the selected dataset
+	high_expression_subset = selected_dataset[which(selected_dataset$average_gene_expression > selected_threshold),]
+
+	#check
+	print("###############################################")
+	print(paste("WE HAVE CORRECTLY SELECTED HIGHLY EXPRESSED GENES?", sep=""))
+	print("###############################################")
+	print(length(which(high_expression_subset$average_gene_expression<selected_threshold)) == 0)
+
+	#extract the gene symbols
+	selected_genes = high_expression_subset$SYMBOL
+
+	#return the results
+	return(selected_genes)
+}
+
+
+##apply the function 
+#apply across the list of datasets and get a list as result
+genes_highly_expressed = llply(list_final_datasets, high_expression, threshold_level=0.95)
+	#llply is equivalent to lapply except that it will preserve labels and can display a progress bar.
+
+#convert the list into a vector to have highly expressed genes across studies in the same vector
+genes_highly_expressed = as.vector(unlist(genes_highly_expressed))
+
+#select those unique cases
+genes_highly_expressed_unique = unique(genes_highly_expressed)
+
+#see
+print("###############################################")
+print(paste("NUMBER OF UNIQUE HIGHLY EXPRESSED GENES", sep=""))
+print("###############################################")
+print(length(genes_highly_expressed_unique))
 
 
 
 
-
-
-#############################################
-######## READ THE BAT INFORMATION ###########
-#############################################
+######################################################################
+####################### ANALYZE BAT CONNECTOME #######################
+######################################################################
 
 #load the information about BAT relationships
 bat_relationship = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/human_genome_connectome/bat_connectome/results/connectome_results/tables/appendix_S1_ordered.csv", sep=",", header=TRUE)
@@ -259,8 +339,8 @@ bat_relationship_2 = bat_relationship_2[order(bat_relationship_2$Genes),]
 #reset the row names
 row.names(bat_relationship_2) <- 1:nrow(bat_relationship_2)
 #add a new level to the Genes factors
-bat_relationship_2$Genes = factor(bat_relationship_2$Genes, c(levels(bat_relationship_2$Genes), "NRIP1"))
-#set NRIP1 o RIP140 as NRIP1
+bat_relationship_2$Genes = factor(bat_relationship_2$Genes, c(unique(bat_relationship_2$Genes), "NRIP1"))
+#set "NRIP1 o RIP140" as NRIP1
 bat_relationship_2[which(bat_relationship_2$Genes == "NRIP1 o RIP140"),]$Genes <- "NRIP1"
 #remove the not used levels
 bat_relationship_2$Genes = droplevels(bat_relationship_2$Genes)
@@ -269,74 +349,84 @@ bat_relationship_2$Genes = droplevels(bat_relationship_2$Genes)
 summary(as.vector(bat_relationship$Genes) == as.vector(bat_relationship_2$Genes))
 summary(bat_relationship$BAT.relationship == bat_relationship_2$BAT.relationship) #we have the same genes and relationships
 
-#select those genes that are NOT known to be associated with BAT within the connectome
-unknown_bat_genes = bat_relationship[which(bat_relationship$BAT.relationship == 0),]$Genes
+#select genes based on the connectome status
+all_bat_genes = bat_relationship[which(bat_relationship$BAT.relationship %in% c(0,1)),]$Genes
+known_bat_genes = bat_relationship[which(bat_relationship$BAT.relationship %in% c(1)),]$Genes
+unknown_bat_genes = bat_relationship[which(bat_relationship$BAT.relationship %in% c(0)),]$Genes
 
 
+## select all genes outside the connectome (both known and unknown to be associated with BAT)
 #load the connectome with UCP1 as core gene
 ucp1_conn = read.table("/media/dftortosa/Windows/Users/dftor/Documents/diego_docs/science/other_projects/human_genome_connectome/bat_connectome/data/human_connectome/UCP1.txt", sep="\t", header=T)
 str(ucp1_conn)
 head(ucp1_conn)
 summary(ucp1_conn)
 
-
-## select all genes outside the connectome (both known and unknown to be associated with BAT)
-#create a vector with all codifican human genes ordered alphabetically from the UCP1 connectome
+#create a vector with all coding human genes ordered alphabetically from the UCP1 connectome
 all_genes = sort(ucp1_conn$Target)
+
 #select all genes except those included in the connectome
-random_genes = all_genes[-which(all_genes %in% bat_relationship[which(bat_relationship$BAT.relationship %in% c(0,1)),]$Genes) ]
+random_genes = all_genes[which(!all_genes %in% all_bat_genes)]
 
 
-#threshold_top = 5000 #we cannot compare the median expression between sets, because we are going to have mutliple studies and I think it is not ok to combine arrays of different studies. Remember, that in each study, we compare the intensity signal of each array in order to detect outliers, e.g., arrays with a different level of background noise, which could bias results. we should do that with the arrays of all studies in order to combine them.
+##calculate the number of highly expressed BAT genes in each set of the BAT connectome
+number_all_bat_genes = length(which(all_bat_genes %in% genes_highly_expressed_unique))
+number_known_bat_genes = length(which(known_bat_genes %in% genes_highly_expressed_unique))
+number_unknown_bat_genes = length(which(unknown_bat_genes %in% genes_highly_expressed_unique))
 
 
-#VAMOS A MIRAR DIRECTMANETE CUANTOS DE LOS CANDIDATOS SE EXPRESAN EN EL BAT, HAY QUE BUSCAR UN CUTOFF Y ELIMINAR LOW EXPRESSED GENES, RPIMER CUARTIL DE MAS EXPRESADOS?. El revisor 2 no dice nada de expression diferencial, solo que analizemos transcriptoma data y validemos los candidatos como BAT markers. Necesitamos mostrar que hay candidatos altamente expresados en el BAT.
-#perdemos poder estadistico, pero ganamos mas finura en la parte biologica al mirar especificamente WAT vs BAT. El conectoma está vlaidadio estadisticamente, vmaos a hora a añadir info biologica.
-#si sale p-value, bien, si no, decimos que tenemos unos cuantos con eivdencia de upregulation y que aun asi los que no tenemos eviedncia pueden serlo, mira thyroid hormones. simplememte refinamos aun mas la lista.
+##calculate the number of highly expressed BAT genes in random sets
+#set the seed
+set.seed(98743)
 
+#open empty vectors
+number_random_all_bat_genes = NULL
+number_random_known_bat_genes = NULL
+number_random_unknown_bat_genes= NULL
 
-#number_genes_candidate = length(which(unknown_bat_genes %in% merged_data_aggregated_ordered[1:threshold_top, "gene_symbols_probs"]))
-number_genes_candidate = length(which(unknown_bat_genes %in% merged_data_aggregated_high_expression$gene_symbols_probs))
-
-
-#NO VAMOS A HACER TEST, PORQUE VA CAMBIANDO SEGUN LOS ESTUDIOS QUE INCLUIMOS, HAY QUE TENER EN CUENTA QUE NO TENEMOS UNA CURACION DE TODOS LOS ESTUDIOS ANALIZANDO BAT... ESTE TEJIDO NO ESTA EN GTEEX... ASI QUE MEJOR DECIR QUE TENEMOS XX CANDIDATOS ENTRE EL PRIMER CUARTIL  DE TODOS LOS ESTUDIOS CONSIDERADOS Y PUNTO... ASI SI NOS PIDEN MAS ESTUDIOS, ESO NO VA A CAMBIAR...
-
-number_genes_random = NULL
+#calculate 1 million random sets of genes
 for(i in 1:100000){
-	random_expression_rows = sample(1:length(random_genes), length(unknown_bat_genes), replace=FALSE)
-	#number_genes_random = append(number_genes_random, length(which(random_genes[random_expression_rows] %in% merged_data_aggregated_ordered[1:threshold_top, "gene_symbols_probs"]))) #CHECK THE NUMBER OF RANDOM GENES WITH EXPRESSION DATA
-	number_genes_random = append(number_genes_random, length(which(random_genes[random_expression_rows] %in% merged_data_aggregated_high_expression$gene_symbols_probs))) #CHECK THE NUMBER OF RANDOM GENES WITH EXPRESSION DATA
+	
+	#select a number of random genes matching each BAT connectome set
+	random_all_bat_genes = sample(1:length(random_genes), length(all_bat_genes), replace=FALSE)
+	random_known_bat_genes = sample(1:length(random_genes), length(known_bat_genes), replace=FALSE)
+	random_unknown_bat_genes = sample(1:length(random_genes), length(unknown_bat_genes), replace=FALSE)
+		#We are using no replacement, because we want every time a gene is included in the random set, then that gene cannot be selected again.
+
+	#extract the number of random genes in the highly expressed set
+	number_random_all_bat_genes = append(number_random_all_bat_genes, length(which(random_genes[random_all_bat_genes] %in% genes_highly_expressed_unique))) 
+	number_random_known_bat_genes = append(number_random_known_bat_genes, length(which(random_genes[random_known_bat_genes] %in% genes_highly_expressed_unique))) 
+	number_random_unknown_bat_genes = append(number_random_unknown_bat_genes, length(which(random_genes[random_unknown_bat_genes] %in% genes_highly_expressed_unique))) 
+
+
+	#CHECK THE NUMBER OF RANDOM GENES WITH EXPRESSION DATA
 }
 
 
-#Calculate p.vale as the proability of a random pair of genes will have lower biological distance than the median of biological distance between all UCP1 connectome genes.
-pval = prop.test(x=length(which(number_genes_random >= number_genes_candidate)), n=length(number_genes_random)) #https://stats.stackexchange.com/questions/167164/test-of-equal-proportions-with-zero-successes
-pval
+## calculate the pvalues
 
+#Calculate p.vale as the proability of a random set of genes will have more BAT highly expressed genes than the number found in the BAT connectome
+pval_all_bat_genes = prop.test(x=length(which(number_random_all_bat_genes >= number_all_bat_genes)), n=length(number_random_all_bat_genes)) 
+	#https://stats.stackexchange.com/questions/167164/test-of-equal-proportions-with-zero-successes
 
+#Calculate p.vale as the proability of a random set of genes will have more BAT highly expressed genes than the number found in the known bat genes
+pval_known_bat_genes = prop.test(x=length(which(number_random_known_bat_genes >= number_known_bat_genes)), n=length(number_random_known_bat_genes)) 
+	#https://stats.stackexchange.com/questions/167164/test-of-equal-proportions-with-zero-successes
 
+#Calculate p.vale as the proability of a random set of genes will have more BAT highly expressed genes than the number found in the unknown bat genes
+pval_unknown_bat_genes = prop.test(x=length(which(number_random_unknown_bat_genes >= number_unknown_bat_genes)), n=length(number_random_unknown_bat_genes)) 
+	#https://stats.stackexchange.com/questions/167164/test-of-equal-proportions-with-zero-successes
 
-
-
-
-
-
-#THE FINAL OUTPUT OF THIS SCRIPT IS
-	#a tab delimited file for each expression dataset, having two columns, the gene symbol and the average gene expression across subjects, treatments and probs. BUT ONLY FOR BAT NOT WAT.
-	#the rows will be in decreasing order following the expression levels
-
-
-#IN THE NEXT SCRIPT
-#load a list with all gene names included in the human genome connectome and those that are BAT candidates genes.
-#create a function that take the top as an argument, for example top 100 of genes more expressed
-	#create a function that
-		#read only the 100 first rows of each dataset, which are ordered in decreasing order based on gene expression
-		#vind all rows indicating the name of the dataset
-	#in the final file, select the unique gene symbols. These are the genes present in the top 100 of any of the studies
-	#create a loop with 10,001 iterations
-		#in the first iteration select the BAT candidates and calculate how many of them are included in the list of top genes previously created. Save the number.
-		#for the rest iterations, create a random set of gene names with the same size than BAT candidates we have. In each case, calculate how many are in the top across studies, and then save the number.
-	#calculate a p-value comparing the number of BAT candidates in the expression top with that of random genes.
-#this can done for 2000 to 10 tops and calculate and enrichment curve
-
-}
+#print
+print("###############################################")
+print(paste("P-VALUE BAT CONNECTOME", sep=""))
+print("###############################################")
+print(pval_all_bat_genes)
+print("###############################################")
+print(paste("P-VALUE KNOWN BAT GENES", sep=""))
+print("###############################################")
+print(pval_known_bat_genes)
+print("###############################################")
+print(paste("P-VALUE UNKNOWN BAT GENES", sep=""))
+print("###############################################")
+print(pval_unknown_bat_genes)
