@@ -62,14 +62,31 @@ sets=queryAE(keywords="brown+adipose+tissue", species="homo+sapiens")
 
 #take a look
 str(sets)
+sets[,which(colnames(sets) != "ExperimentFactors")]
 	#we get the same, 15 experiments, just like we search in the web, the same IDs
 	#https://www.ebi.ac.uk/arrayexpress/search.html?query=brown+adipose+tissue&organism=Homo+sapiens&exptype%5B%5D=%22rna+assay%22
 
 
+##IMPORTANT: WE ARE SELECTING ONLY microarray studies, not RNA-seq studies
+#There are much more studies based on microarray technology compare to RNA-seq. Therefore, we have more availability to select. In the case of RNA-seq, there are only 3 studies with raw data. In the case of microarray technology, there are much more studies. 
+	#https://www.ebi.ac.uk/arrayexpress/search.html?query=brown+adipose+tissue&organism=Homo+sapiens&exptype%5B%5D=%22rna+assay%22
+
+#Importantly, people do not recommend to combine different technologies, so we would need to do the analyses separately. For now, it makes sense to stick to microarray.
+	#https://www.biostars.org/p/130986/
+
+#If a reviewer asks for RNA-seq, you can use ArrayExpressHTS, which is a bioconductor package used for processing this type of data.
+	#https://bioconductor.org/packages/release/bioc/html/ArrayExpressHTS.html
+
+
 ##select sets with raw data available
-#I prefer to select only those with raw data so I can process the data in the same way for all datasets. For example, if a dataset has been processed using RMA, expression has been log transformed, but not if the MAS5 processing was applied. Therefore gene expression of each study is not comparable. In our case, we are going to calculate tops in each dataset, but I think it is better to maintain the same treatment just in case...
+#Note that the results obtained from ArrayExpress do not consider RNA-seq datasets, so in all cases they are indicated as not having Raw nor Processed data.
+
+#Among microarray, I prefer to select only those with raw data so I can process the data in the same way for all datasets. For example, if a dataset has been processed using RMA, expression has been log transformed, but not if the MAS5 processing was applied. Therefore gene expression of each study is not comparable. In our case, we are going to calculate tops in each dataset, but I think it is better to maintain the same treatment just in case...
 sets_raw=sets[which(sets$Raw=="yes"),]
 	#this considers only datasets with raw data STORED in ArrayExpress. Therefore, this discards cases with RNA-seq data stored in ENA. If a reviewer ask for it, we can try to include also this data.
+
+#see
+sets_raw[,which(colnames(sets_raw) != "ExperimentFactors")]
 
 #check
 print("#########################################")
@@ -77,11 +94,11 @@ print("CHECK THAT ALL DATASETS HAVE DATA FOR HUMANS AND INCLUDE RAW DATA")
 print(length(which(sets_raw$Raw != "yes"))==0 & length(which(!grepl("Homo sapiens", sets_raw$Species)))==0)
 print("#########################################")
 
-#Note that we have stopped the regular imports of Gene Expression Omnibus (GEO) data into ArrayExpress. So, for GEOD datasets, the stored version may not be the latest version of the experiment.
+#Note that ArrayExpress have stopped the regular imports of Gene Expression Omnibus (GEO) data into ArrayExpress. So, for GEOD datasets, the stored version may not be the latest version of the experiment.
+	#we have to check that in each dataset
 
 
-##select only those experiments measuring gene expression at BAT AND raw data
-
+##select only those microarray experiments measuring gene expression in BAT-like tissues
 #sets with BAT data
 bat_datasets_info = list() #empty list to save info
 #E-GEOD-56635
@@ -89,7 +106,7 @@ bat_datasets_info[[1]] = list(
 	dataset="E-GEOD-56635",
 	paper="Reprogrammed Functional Brown Adipocytes Ameliorate Insulin Resistance and Dyslipidemia in Diet-Induced Obesity and Type 2 Diabetes (doi:10.1016/j.stemcr.2015.08.007)",
 	url="https://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-56635/?keywords=brown+adipose+tissue&organism=Homo+sapiens&exptype%5B%5D=&exptype%5B%5D=&array=",
-	details_bat="The original publication says that the accession number for the microarray data reported is GSE52817, but that number connect to data for the transformation of fibroblasts to osteoblasts. In contrast, the paper explains that created two types of brown adipocytes: i) iBA (induced brown adipocytes), coming from human induced pluripotent stem cells (iPSCs). After 12 days, 75% of the cells showed BA-like appearance (multilocular lipid droplets and abound mitochondria. They also showed high expression BAT markers (UCP1, CIDEA and DIO2); dBA: Direct conversion from human fibroblasts. They used retroviruses to include reprogramming factor genes. CM-transduced genes were considered dBAs, being more than 90% of them UCP1 positive. They expressed mRNA of UCP1, CIDE and ADIPOQ at high levels compared to fibroblasts. Therefore, we can obtain gene expression data from cells showing BAT-like phenotypes: iBAs and dBAs. There are also mouse cells, but our script will select only human cells (see below).", 
+	details_bat="The original publication says that the accession number for the microarray data reported is GSE52817, but that number connect to data for the transformation of fibroblasts to osteoblasts. In contrast, the paper explains that created two types of brown adipocytes: i) iBA (induced brown adipocytes), coming from human induced pluripotent stem cells (iPSCs). After 12 days, 75% of the cells showed BA-like appearance (multilocular lipid droplets and abound mitochondria. They also showed high expression BAT markers (UCP1, CIDEA and DIO2) compared to human dermal fibroblasts. Stimulation of these cells with isoproterenol, a general agonist of β-adrenergic receptors, resulted in further elevation of expression level of UCP1 mRNA, which is a typical adrenergic response of BAs; dBA: Direct conversion from human fibroblasts. They used retroviruses to include reprogramming factor genes. CM-transduced genes were considered dBAs, being more than 90% of them UCP1 positive. They expressed mRNA of UCP1, CIDE and ADIPOQ at high levels compared to fibroblasts.  They also showed higher rate of oxygen consumption than fibroblasts. The oxygen uptake of dBAs was only partially suppressed by oligomycin, an inhibitor of mitochondrial ATP synthase, demonstrating a high rate of uncoupling respiration. Therefore, we can obtain gene expression data from cells showing BAT-like phenotypes: iBAs and dBAs. There are also mouse cells, but our script will select only human cells (see below). For human cells, RNA was obtained from WAs, iBAs, and dBAs, and after reverse-transcription, microarray analyses were performed using GeneChip human Gene 1.0 ST (Affymetrix) according to the manufacturer’s instruction.", 
 	details_date="The dataset was updated 19 August 2015 for the last time in ArrayExpress, and the corresponding paper was published in 13 October 2015. Therefore, this is likely the last version of the dataset.")
 
 #E-GEOD-19643
@@ -130,16 +147,15 @@ saveRDS(object=bat_datasets_info, file="info_datasets.Rds")
 #### OBTAIN DATA FOR EACH DATASET #####
 #######################################
 
-#extend the time window during which a function can download, for example, download.file, which is used by ArrayExpress function
-getOption('timeout')
-options(timeout=1000)
-getOption('timeout')
-	#https://stackoverflow.com/questions/35282928/how-do-i-set-a-timeout-for-utilsdownload-file-in-r
-
-
 ##write a function to do that
 #selected_ids_bat_studies=ids_bat_studies[1] #for debugging
 extract_expression_data = function(selected_ids_bat_studies){
+
+	#extend the time window during which a function can download, for example, download.file, which is used by ArrayExpress function. We need this inside the function, so the same timeout is applied for each independent run.
+	getOption('timeout')
+	options(timeout=1000)
+	getOption('timeout')
+		#https://stackoverflow.com/questions/35282928/how-do-i-set-a-timeout-for-utilsdownload-file-in-r
 
 	#make a directory for the selected dataset
 	system(paste("mkdir -p ", selected_ids_bat_studies, sep=""))
@@ -194,7 +210,7 @@ extract_expression_data = function(selected_ids_bat_studies){
 		print("###############################################")
 		stop(paste(selected_ids_bat_studies, " HAS NO HUMAN GENES", sep=""))
 		print("###############################################")
-	} #According to some, if you have HuGene arrays, you should use RMA (or GCRMA) normalization, since you don't have mismatch probes (although you have other types of control probes).
+	} #According to some people, if you have HuGene arrays, you should use RMA (or GCRMA) normalization, since you don't have mismatch probes (although you have other types of control probes).
 		#https://www.biostars.org/p/211389/
 
 	#make some checks to avoid datasets that are not affymetrix experiments
@@ -277,6 +293,7 @@ extract_expression_data = function(selected_ids_bat_studies){
 			#normalize: Logical - perform quantile normalization?
 			#target: Level of summarization (e.g., at the gene level... only for Exon/Gene arrays)
 				#core would summarize to the gene level. However, if your array is an 'Exon' array, this may still only summarise to exon-level, requiring you to perform a further [manual] summarisation to gene-level.
+					#the default is "core"
 					#we are going to do the manul summarization at the gene level anyways.
 					#https://www.biostars.org/p/271379/#271588
 
@@ -310,7 +327,6 @@ extract_expression_data = function(selected_ids_bat_studies){
 		#select arrays that do not come from white adypocytes 
 		bat_arrays_index = which(!grepl("White Adipocytes", AEsetnorm$Characteristics..cell.type., fixed=TRUE))
 			#You can use pData to access to the phenotypic data (e.g., covariates) and meta-data (e.g., descriptions of covariates) associated with an experiment.
-			#The quality metrics are better after removing WAT arrays.
 
 		#create a phenotypic variable to define if the array comes from BAT or WAT
 		#AEsetnorm$tissue = NA
@@ -330,7 +346,10 @@ extract_expression_data = function(selected_ids_bat_studies){
 		bat_arrays_index = which(grepl("PGC-1 alpha", AEsetnorm$Comment..Sample_source_name., fixed=TRUE))
 			#PGC-1 alpha transformed mesenchymal cells are those showing BAT-like features.
 			#You can use pData to access to the phenotypic data (e.g., covariates) and meta-data (e.g., descriptions of covariates) associated with an experiment.
-			#The quality metrics are better after removing WAT arrays.
+
+		#notes after quality check for this dataset
+		#in general, there are not great signals of problem in specific arrays. The processing worked well.
+		#note, however, that the two arrays of PGC-1 alpha, which shows BAT-like features, do not constitute a clear group opposite to the non-PGC-1 alpha arrays, i.e., controls. This is something to consider, because maybe these cells are not different enough from the controls. Therefore, this is another reason to the the analyses considering only BAT biopsies studies.
 
 		#save the column used to filter
 		column_filter_names = "Comment..Sample_source_name."
@@ -344,7 +363,6 @@ extract_expression_data = function(selected_ids_bat_studies){
 		bat_arrays_index = which(grepl("perithyroid", AEsetnorm$Characteristics..organism.part., fixed=TRUE))
 			#This includes female and male subjects
 			#You can use pData to access to the phenotypic data (e.g., covariates) and meta-data (e.g., descriptions of covariates) associated with an experiment.
-			#The quality metrics are better after removing WAT arrays.
 
 		#save the column used to filter
 		column_filter_names = "Characteristics..organism.part."
@@ -352,8 +370,13 @@ extract_expression_data = function(selected_ids_bat_studies){
 		#save the names of the selected arrays
 		selected_arrays = selected_arrays[bat_arrays_index]
 
-		#remove an individual with perithyroid data which seems to be an outlier
-		#selected_arrays = selected_arrays[-3] #CHECK THIS
+		#remove three individuals with perithyroid data which seems to be an outlier
+		selected_arrays = selected_arrays[which(!selected_arrays %in% c("GSM685080.CEL", "GSM685075.CEL", "GSM685074.CEL"))]
+			#when analyzing all arrays (including WAT), these arrays are considered as outliers
+				#GSM685080.CEL according to the distances between arrays.
+				#GSM685075.CEL according to the distribution of the intensity.
+				#GSM685074.CEL according to the distances between arrays and the distribution of the intensity.
+			#the removal of these arrays does not qualitatively change the results.
 	}
 	if(selected_ids_bat_studies == "E-GEOD-54280"){
 
@@ -361,13 +384,17 @@ extract_expression_data = function(selected_ids_bat_studies){
 		bat_arrays_index = which(grepl("deep neck", AEsetnorm$Comment..Sample_source_name., fixed=TRUE))
 			#This includes male and female subjects
 			#You can use pData to access to the phenotypic data (e.g., covariates) and meta-data (e.g., descriptions of covariates) associated with an experiment.
-			#The quality metrics are better after removing WAT arrays.
 
 		#save the column used to filter
 		column_filter_names = "Comment..Sample_source_name."
 
 		#save the names of the selected arrays
 		selected_arrays = selected_arrays[bat_arrays_index]
+
+		#remove a sample that it is close to WAT samples
+		#selected_arrays = selected_arrays[which(!selected_arrays %in% c("GSM1311785_04-12_P1.CEL"))]
+			#GSM1311787_23-12_P1.CEL is close to WAT arrays according to the PCA.
+			#but its removal does not clearly separate BAT and WAT in two groups.
 	}
 
 	#select only the arrays we are interested
@@ -412,9 +439,6 @@ extract_expression_data = function(selected_ids_bat_studies){
 ###### PARALLELIZE THE PROCESS ######
 #####################################
 
-#there is an error for one of the datasets and it is only produced when using this. We can use apply functions. It is ok, because this is not too much computational time.
-if(FALSE){
-
 #BAT studies
 ids_bat_studies
 
@@ -423,20 +447,12 @@ clust <- makeCluster(length(ids_bat_studies), outfile="") #outfile let you to se
 registerDoParallel(clust)
 
 #run the function for all populations
-foreach(i=ids_bat_studies, .packages=c("ArrayExpress", "arrayQualityMetrics")) %dopar% {
+ids_bat_studies_processed=foreach(i=ids_bat_studies, .packages=c("ArrayExpress", "arrayQualityMetrics")) %dopar% {
     extract_expression_data(selected_ids_bat_studies=i)
 }
 
 #stop the cluster 
 stopCluster(clust)
-}
-
-
-
-################################
-###### APPLY THE FUNCTION ######
-################################
-ids_bat_studies_processed = sapply(X=ids_bat_studies, FUN=extract_expression_data)
 
 #check
 print("###############################################")
