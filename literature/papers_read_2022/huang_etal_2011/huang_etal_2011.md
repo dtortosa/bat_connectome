@@ -1,0 +1,1 @@
+Info about this paper in "01_array_express_preprocessing_v1.R", "bat_datasets_info" object.
