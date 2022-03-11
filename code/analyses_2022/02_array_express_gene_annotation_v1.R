@@ -8,14 +8,6 @@
 
 
 
-
-#REVISANDO E-GEOD-54280 QUALITY CONTROL, BUSCANDO EL QUE PARECE WAT, maybe GSM1311789_I_P1.CEL?, CORRES TODO Y PASA AL P-VALUE
-
-
-
-
-
-
 ####################################################################################
 ########################## PREPROCESING GENE EXPRESSSION ###########################
 ####################################################################################
@@ -73,7 +65,7 @@ ids_bat_studies = as.vector(unlist(sapply(X=bat_datasets_info, "[", "dataset")))
 
 
 ##function for doing all the analyses across the datasets of interest
-#bat_studies_considered=ids_bat_studies[which(ids_bat_studies %in% c("E-GEOD-27657", "E-GEOD-54280"))] #for debugging
+#bat_studies_considered=c("E-GEOD-27657", "E-GEOD-54280") #for debugging
 full_analysis = function(bat_studies_considered){
 
 	#print start
@@ -88,7 +80,7 @@ full_analysis = function(bat_studies_considered){
 	##################################################################
 
 	##function for calculating expression per gene
-	#selected_ids_bat_studies=ids_bat_studies[1] #for debugging
+	#selected_ids_bat_studies=bat_studies_considered[1] #for debugging
 	extract_expression_data = function(selected_ids_bat_studies){
 	
 		##starting
@@ -478,7 +470,7 @@ clust <- makeCluster(length(sets_of_datasets), outfile="") #outfile let you to s
 registerDoParallel(clust)
 
 #run the function
-sets_of_datasets_processed = foreach(i=sets_of_datasets, .packages=c("ArrayExpress", "arrayQualityMetrics", "dplyr", "plyr")) %dopar% {
+sets_of_datasets_processed = foreach(i=sets_of_datasets, .packages=c("ArrayExpress", "arrayQualityMetrics", "dplyr", "plyr", "hugene10sttranscriptcluster.db", "hgu133plus2.db")) %dopar% {
     full_analysis(bat_studies_considered=i)
 }
 

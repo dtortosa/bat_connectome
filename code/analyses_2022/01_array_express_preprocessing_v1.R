@@ -244,9 +244,9 @@ extract_expression_data = function(selected_ids_bat_studies){
 	#The oligo package implements background subtraction through the backgroundCorrect command. The method currently available is the one used in RMA, which treats the signal intensities of the perfect match (PM) probes as a convolution of noise and true signal. Additional methods will be available on future releases and choices will be made with the method argument (currently, the default is ’rma’).
 		#see this link for PM probes (https://online.stat.psu.edu/stat555/node/28/)
 	if(FALSE){
-	bg_AEset_human = backgroundCorrect(object=AEset_human, method="rma")
-		#object: Object containing probe intensities to be preprocessed.
-		#method: String determining which method to use at that preprocessing step
+		bg_AEset_human = backgroundCorrect(object=AEset_human, method="rma")
+			#object: Object containing probe intensities to be preprocessed.
+			#method: String determining which method to use at that preprocessing step
 	}
 
 	#you can compare the probe intensities with and without background correction
@@ -259,8 +259,8 @@ extract_expression_data = function(selected_ids_bat_studies){
 	#Normalization
 	#The normalize method provided by oligo allows the user to normalize the input data. Normalization is intended to remove from the intensity measures any systematic trends which arise from the microarray technology rather than from differences between the probes or between the target RNA samples hybridized to the arrays. Different normalization methods are available. The available options are given by normalizationMethods and the argument method in normalize is used to select the normalization approach to be used.
 	if(FALSE){
-	norm_bg_AEset_human <- normalize(object=bg_AEset_human)
-		#object: A data object, typically containing microarray data.
+		norm_bg_AEset_human <- normalize(object=bg_AEset_human)
+			#object: A data object, typically containing microarray data.
 	}
 	
 	#Summarization
@@ -391,10 +391,9 @@ extract_expression_data = function(selected_ids_bat_studies){
 		#save the names of the selected arrays
 		selected_arrays = selected_arrays[bat_arrays_index]
 
-		#remove a sample that it is close to WAT samples
-		#selected_arrays = selected_arrays[which(!selected_arrays %in% c("GSM1311785_04-12_P1.CEL"))]
-			#GSM1311787_23-12_P1.CEL is close to WAT arrays according to the PCA.
-			#but its removal does not clearly separate BAT and WAT in two groups.
+		#remove a sample that it is very close to WAT samples
+		selected_arrays = selected_arrays[which(!selected_arrays %in% c("GSM1311783_01-11_P1.CEL"))]
+			#GSM1311783_01-11_P1.CEL is close to WAT arrays according to the PCA. After its removal, BAT and WAT sample are more clearly differentiated. Note that GSM1311787_23-12_P1.CEL is considered now an outlier according to the distribution of intensity, but this is only when BAT sample are considered in isolation, when WAT is considered, there are no outliers. In addition, if you see the distribution of intensity in density plots with only BAT, there is not array that differentiate a lot from the rest, so we are going to end here.
 	}
 
 	#select only the arrays we are interested
