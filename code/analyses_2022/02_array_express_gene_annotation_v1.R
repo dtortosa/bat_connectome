@@ -421,6 +421,11 @@ full_analysis = function(bat_studies_considered){
 	number_known_bat_genes = length(which(known_bat_genes %in% genes_highly_expressed_unique))
 	number_unknown_bat_genes = length(which(unknown_bat_genes %in% genes_highly_expressed_unique))
 	
+	#print number of cases inside the connectome
+	print("###############################################")
+	print(paste("NUMBER OF CASES INSIDE THE CONNECTOME: ", paste(bat_studies_considered, collapse=" | "), sep="")); print(paste("BAT CONNECTOME: ", number_all_bat_genes, "; KNOWN BAT: ", number_known_bat_genes, "; UNKNOWN BAT: ", number_unknown_bat_genes, sep=""))
+	print("###############################################")
+
 	
 	##calculate the number of highly expressed BAT genes in random sets
 	#set the seed
@@ -463,17 +468,14 @@ full_analysis = function(bat_studies_considered){
 	
 	#print
 	print("###############################################")
-	print(paste("P-VALUE BAT CONNECTOME: ", paste(bat_studies_considered, collapse=" | "), sep=""))
+	print(paste("P-VALUE BAT CONNECTOME: ", paste(bat_studies_considered, collapse=" | "), sep="")); print(pval_all_bat_genes)
 	print("###############################################")
-	print(pval_all_bat_genes)
 	print("###############################################")
-	print(paste("P-VALUE KNOWN BAT GENES: ", paste(bat_studies_considered, collapse=" | "), sep=""))
+	print(paste("P-VALUE KNOWN BAT GENES: ", paste(bat_studies_considered, collapse=" | "), sep="")); print(pval_known_bat_genes)
 	print("###############################################")
-	print(pval_known_bat_genes)
 	print("###############################################")
-	print(paste("P-VALUE UNKNOWN BAT GENES: ", paste(bat_studies_considered, collapse=" | "), sep=""))
+	print(paste("P-VALUE UNKNOWN BAT GENES: ", paste(bat_studies_considered, collapse=" | "), sep="")); print(pval_unknown_bat_genes)
 	print("###############################################")
-	print(pval_unknown_bat_genes)
 
 	#return the names of the datasets processed
 	return(bat_studies_considered)
@@ -486,7 +488,10 @@ full_analysis = function(bat_studies_considered){
 #####################################
 
 #BAT studies
-sets_of_datasets = list(ids_bat_studies[which(ids_bat_studies %in% c("E-GEOD-27657", "E-GEOD-54280"))], ids_bat_studies)
+sets_of_datasets = list(
+	ids_bat_studies, #all the datasets considered
+	ids_bat_studies[which(ids_bat_studies %in% c("E-GEOD-27657", "E-GEOD-54280"))]) #only datasets from BAT biopsies
+	#when focusing on BAT biopsies, there is a decrease in the number of BAT connectome genes within the top expression of BAT. However, there is an increase of significance. This is likely caused because the number of highly expressed genes in BAT decrease from 2282 to 1637. It seems that the list shrinks, but affects more to random genes, suggesting that the list of remaining list is more enriched in BAT. This would increase the power.
 
 #set up cluster
 clust <- makeCluster(length(sets_of_datasets), outfile="") #outfile let you to see the output in the terminal "https://blog.revolutionanalytics.com/2015/02/monitoring-progress-of-a-foreach-parallel-job.html"
