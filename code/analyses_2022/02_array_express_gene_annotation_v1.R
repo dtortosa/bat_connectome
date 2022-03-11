@@ -65,7 +65,7 @@ ids_bat_studies = as.vector(unlist(sapply(X=bat_datasets_info, "[", "dataset")))
 
 
 ##function for doing all the analyses across the datasets of interest
-#bat_studies_considered=c("E-GEOD-27657", "E-GEOD-54280") #for debugging
+#bat_studies_considered=ids_bat_studies[which(ids_bat_studies %in% c("E-GEOD-27657", "E-GEOD-54280"))] #for debugging
 full_analysis = function(bat_studies_considered){
 
 	#print start
@@ -186,7 +186,7 @@ full_analysis = function(bat_studies_considered){
 	
 		#check
 		print("###############################################")
-		print(paste("ALL PROBS WITHOUT GENE SYMBOL WERE REMOVED?:", sep="")); print(length(which(is.na(gene_symbols_probs))) == 0)
+		print(paste("ALL PROBS WITHOUT GENE SYMBOL WERE REMOVED?:", sep="")); print(length(which(is.na(gene_symbols_probs$SYMBOL))) == 0)
 		print("###############################################")
 	
 	
@@ -277,6 +277,22 @@ full_analysis = function(bat_studies_considered){
 	print("###############################################")
 
 	
+	##extract the names of all the genes for which we have expression data
+	#extract the gene symbols of each data.frame in the list and save as a vector
+	list_genes_expression_data = as.vector(unlist(sapply(X=list_final_datasets, "[", "SYMBOL")))
+	
+	#see
+	print("###############################################")
+	print(paste("CHECK NUMBER OF GENES ACROSS DATASETS: ", paste(bat_studies_considered, collapse=" | "), sep="")); print(length(list_genes_expression_data) == sum(sapply(X=list_final_datasets, nrow)))
+	print("###############################################")
+
+	#extract the unique cases
+	list_genes_expression_data_unique = unique(list_genes_expression_data)
+	print("###############################################")
+	print(paste("UNIQUE GENES FOR WHICH WE HAVE EXPRESSION DATA: ", paste(bat_studies_considered, collapse=" | "), sep="")); print(length(list_genes_expression_data_unique))
+	print("###############################################")
+
+
 	
 	#############################################################################
 	####################### SELECT HIGHLY EXPRESSED GENES #######################
@@ -309,7 +325,7 @@ full_analysis = function(bat_studies_considered){
 		print("###############################################")
 		print(paste("WE HAVE CORRECTLY SELECTED HIGHLY EXPRESSED GENES?", sep=""))
 		print("###############################################")
-		print(length(which(high_expression_subset$average_gene_expression<selected_threshold)) == 0)
+		print(length(which(high_expression_subset$average_gene_expression<=selected_threshold)) == 0)
 	
 		#extract the gene symbols
 		selected_genes = high_expression_subset$SYMBOL
@@ -334,7 +350,6 @@ full_analysis = function(bat_studies_considered){
 	print("###############################################")
 	print(paste("NUMBER OF UNIQUE HIGHLY EXPRESSED GENES: ", paste(bat_studies_considered, collapse=" | "), sep="")); print(length(genes_highly_expressed_unique))
 	print("###############################################")
-	
 	
 	
 	
@@ -374,6 +389,11 @@ full_analysis = function(bat_studies_considered){
 	known_bat_genes = bat_relationship[which(bat_relationship$BAT.relationship %in% c(1)),]$Genes
 	unknown_bat_genes = bat_relationship[which(bat_relationship$BAT.relationship %in% c(0)),]$Genes
 	
+	#see
+	print("###############################################")
+	print(paste("FOR HOW MANY BAT CONNECTOME GENES WE HAVE EXPRESSION DATA: ", paste(bat_studies_considered, collapse=" | "), sep="")); print(paste(length(which(all_bat_genes %in% list_genes_expression_data_unique)), " out of ", length(all_bat_genes), sep=""))
+	print("###############################################")
+
 	
 	## select all genes outside the connectome (both known and unknown to be associated with BAT)
 	#load the connectome with UCP1 as core gene
@@ -387,9 +407,15 @@ full_analysis = function(bat_studies_considered){
 	
 	#select all genes except those included in the connectome
 	random_genes = all_genes[which(!all_genes %in% all_bat_genes)]
-		#SEPARATELY FOR EACH TEST? 
+		#it is not specially relevant if we remove all the BAT connectome genes or just the known BAT genes for the test of known, and just unknown BAT genes for the test of unknown. We are talking of 168 genes among 16,000. We can just remove all the BAT connectome genes (as we did for the previous BAT-known analyses) without impacting significantly the pool of control genes.
+		#in the same vein, yes, the same gene could be considered twice as control, but the probability is very low given that we are selecting around 100 genes each time within a pool of 16000 genes.
 	
-	
+	#see
+	print("###############################################")
+	print(paste("FOR HOW MANY RANDOM GENES WE HAVE EXPRESSION DATA: ", paste(bat_studies_considered, collapse=" | "), sep="")); print(paste(length(which(random_genes %in% list_genes_expression_data_unique)), " out of ", length(random_genes), sep=""))
+	print("###############################################")
+
+
 	##calculate the number of highly expressed BAT genes in each set of the BAT connectome
 	number_all_bat_genes = length(which(all_bat_genes %in% genes_highly_expressed_unique))
 	number_known_bat_genes = length(which(known_bat_genes %in% genes_highly_expressed_unique))
@@ -412,15 +438,12 @@ full_analysis = function(bat_studies_considered){
 		random_all_bat_genes = sample(1:length(random_genes), length(all_bat_genes), replace=FALSE)
 		random_known_bat_genes = sample(1:length(random_genes), length(known_bat_genes), replace=FALSE)
 		random_unknown_bat_genes = sample(1:length(random_genes), length(unknown_bat_genes), replace=FALSE)
-			#We are using no replacement, because we want every time a gene is included in the random set, then that gene cannot be selected again.
+			#We are using no replacement, because we want every time a gene is included in the random set, then that gene cannot be selected again. In other words, we do not want the same gene two times in the same control set. This is unlikely given the great pool of controls, but we use this just in case.
 	
 		#extract the number of random genes in the highly expressed set
 		number_random_all_bat_genes = append(number_random_all_bat_genes, length(which(random_genes[random_all_bat_genes] %in% genes_highly_expressed_unique))) 
 		number_random_known_bat_genes = append(number_random_known_bat_genes, length(which(random_genes[random_known_bat_genes] %in% genes_highly_expressed_unique))) 
 		number_random_unknown_bat_genes = append(number_random_unknown_bat_genes, length(which(random_genes[random_unknown_bat_genes] %in% genes_highly_expressed_unique))) 
-	
-	
-		#CHECK THE NUMBER OF RANDOM GENES WITH EXPRESSION DATA
 	}
 	
 	
@@ -479,5 +502,5 @@ stopCluster(clust)
 
 #check
 print("###############################################")
-print(paste("WE PROCESSED ALL SELECTED DATASETS?", sep="")); print(summary(sets_of_datasets == sets_of_datasets_processed))
+print(paste("WE PROCESSED ALL SELECTED DATASETS?", sep="")); print(identical(sets_of_datasets, sets_of_datasets_processed))
 print("###############################################")
