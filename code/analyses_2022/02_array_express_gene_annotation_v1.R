@@ -415,11 +415,32 @@ full_analysis = function(bat_studies_considered){
 	print(paste("FOR HOW MANY RANDOM GENES WE HAVE EXPRESSION DATA: ", paste(bat_studies_considered, collapse=" | "), sep="")); print(paste(length(which(random_genes %in% list_genes_expression_data_unique)), " out of ", length(random_genes), sep=""))
 	print("###############################################")
 
-
 	##calculate the number of highly expressed BAT genes in each set of the BAT connectome
-	number_all_bat_genes = length(which(all_bat_genes %in% genes_highly_expressed_unique))
-	number_known_bat_genes = length(which(known_bat_genes %in% genes_highly_expressed_unique))
-	number_unknown_bat_genes = length(which(unknown_bat_genes %in% genes_highly_expressed_unique))
+	#subset those genes in the top of expression
+	all_bat_genes_high_expression = all_bat_genes[which(all_bat_genes %in% genes_highly_expressed_unique)]
+	known_bat_genes_high_expression = known_bat_genes[which(known_bat_genes %in% genes_highly_expressed_unique)]
+	unknown_bat_genes_high_expression = unknown_bat_genes[which(unknown_bat_genes %in% genes_highly_expressed_unique)]
+
+	#save in a list
+	lists_highly_expressed_BAT_connectome_genes = list(all_bat_genes_high_expression, known_bat_genes_high_expression, unknown_bat_genes_high_expression)
+	names(lists_highly_expressed_BAT_connectome_genes) = c("all_bat_genes_high_expression", "known_bat_genes_high_expression", "unknown_bat_genes_high_expression")
+	saveRDS(lists_highly_expressed_BAT_connectome_genes, paste("array_express_gene_expression/", paste(bat_studies_considered, collapse="_"), "_lists_highly_expressed_BAT_connectome_genes.Rds", sep=""))
+
+	#print the genes
+	print("###############################################")
+	print(paste("BAT CONNECTOME GENES IN TOP BAT EXPRESSION: ", paste(bat_studies_considered, collapse=" | "), sep="")); print(all_bat_genes_high_expression)
+	print("###############################################")
+	print("###############################################")
+	print(paste("KNOWN-BAT GENES IN TOP BAT EXPRESSION: ", paste(bat_studies_considered, collapse=" | "), sep="")); print(known_bat_genes_high_expression)
+	print("###############################################")
+	print("###############################################")
+	print(paste("BAT CANDIDATES IN TOP BAT EXPRESSION: ", paste(bat_studies_considered, collapse=" | "), sep="")); print(unknown_bat_genes_high_expression)
+	print("###############################################")
+
+	#extract the number of genes
+	number_all_bat_genes = length(all_bat_genes_high_expression)
+	number_known_bat_genes = length(known_bat_genes_high_expression)
+	number_unknown_bat_genes = length(unknown_bat_genes_high_expression)
 	
 	#print number of cases inside the connectome
 	print("###############################################")
